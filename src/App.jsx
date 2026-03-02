@@ -65,6 +65,7 @@ function TagEditor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [cardUrl, setCardUrl] = useState('');
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const meshRef = useRef(null);
 
@@ -96,7 +97,12 @@ function TagEditor() {
 
   const handleExportSTL = useCallback(() => {
     if (!meshRef.current) return;
+    setShowTutorial(true);
+  }, []);
+
+  const triggerDownloadSTL = useCallback(() => {
     exportSTL(meshRef.current, `pawtag3d_${name.toLowerCase().replace(/\s+/g, '_')}`);
+    setShowTutorial(false);
   }, [name]);
 
   const handleExport3MF = useCallback(() => {
@@ -120,9 +126,8 @@ function TagEditor() {
       <aside className="sidebar">
         <h1 className="app-title">PawTag 3D</h1>
         <p className="app-subtitle">
-          Il QR aprirà una pagina con nome e numero — nessun sito esterno richiesto.
+          Digitalizza l'identità del tuo animale domestico. Sicuro, rapido, essenziale.
         </p>
-
         <div className="form-group">
           <label htmlFor="animal-name">Nome animale</label>
           <input
@@ -195,14 +200,6 @@ function TagEditor() {
           </ul>
         </div>
 
-        <div className="qr-info-box">
-          <span className="qr-info-icon">ℹ️</span>
-          <p>
-            Il QR punterà a <strong>{name || '…'}</strong> /{' '}
-            <strong>{phone || '…'}</strong>
-          </p>
-        </div>
-
         <button
           className="btn btn-primary"
           onClick={handleGenerate}
@@ -222,9 +219,9 @@ function TagEditor() {
             <button className="btn btn-export" onClick={handleExportSTL}>
               Scarica STL
             </button>
-            <button className="btn btn-export btn-3mf" onClick={handleExport3MF}>
+            {/* <button className="btn btn-export btn-3mf" onClick={handleExport3MF}>
               Scarica 3MF bicolore
-            </button>
+            </button> */}
           </div>
         )}
 
@@ -256,6 +253,43 @@ function TagEditor() {
                 ? 'Costruzione geometria CSG in corso…'
                 : 'Compila nome e telefono, poi clicca "Genera anteprima"'}
             </p>
+          </div>
+        )}
+
+        {showTutorial && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h2>Preparazione alla stampa 3D</h2>
+              <p className="tutorial-text">
+                Per ottenere un risultato bicolore perfetto con il file STL:
+                <br /><br />
+                Nello slicer (es. Bambu Studio o PrusaSlicer),
+                usa lo strumento <strong>"Dipingi"</strong> (Paint Tool)
+                per colorare solo i quadratini in rilievo del QR code.
+              </p>
+
+              <div className="tutorial-media-placeholder">
+                {/* Qui andrà la GIF del tutorial */}
+                <div className="media-placeholder-text">
+                  [Video Tutorial in caricamento...]
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowTutorial(false)}
+                >
+                  Annulla
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={triggerDownloadSTL}
+                >
+                  Scarica STL ora
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
