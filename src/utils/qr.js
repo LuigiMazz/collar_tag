@@ -17,7 +17,51 @@ import qrcode from 'qrcode-generator';
  */
 export function generateQRMatrix(text, typeNumber = 0, errorLevel = 'M') {
   const qr = qrcode(typeNumber, errorLevel);
-  qr.addData(text);
+
+  // Optimization: Multi-segment encoding
+  // If we have our "Extreme" marker '#e:', we split the URL.
+  // Segment 1: URL prefix including #e: (Byte mode)
+  // Segment 2: Data (AlphaNum mode - much more dense)
+  const markers = ['#e:', '#*'];
+  const marker = markers.find(m => text.includes(m));
+
+  if (marker) {
+    const parts = text.split(marker);
+    let prefix = parts[0] + marker;
+    const data = parts.slice(1).join(marker).toUpperCase();
+
+    // Segment 1: URL Prefix (Byte mode for protocol)
+    // If the prefix itself is Alphanumeric (common for domain/path), use Alphanumeric
+    if (/^[0-9A-Z $%*+\-./:]+$/.test(prefix.toUpperCase())) {
+      qr.addData(prefix.toUpperCase(), 'Alphanumeric');
+    } else {
+      qr.addData(prefix, 'Byte');
+    }
+
+    // Segment 2: Data
+    // We try to use ONE single Alphanumeric segment for all data to avoid 
+    // the ~15bit overhead of switching modes between fields.
+    if (/^[0-9A-Z $%*+\-./:]+$/.test(data)) {
+      qr.addData(data, 'Alphanumeric');
+    } else {
+      // Fallback: Smart splitting (existing logic)
+      const dataParts = data.split(':');
+      for (let i = 0; i < dataParts.length; i++) {
+        const part = dataParts[i];
+        if (/^\d+$/.test(part) && part.length >= 7) {
+          qr.addData(part, 'Numeric');
+        } else if (/^[0-9A-Z $%*+\-./:]+$/.test(part)) {
+          qr.addData(part, 'Alphanumeric');
+        } else {
+          qr.addData(part, 'Byte');
+        }
+        if (i < dataParts.length - 1) qr.addData(':', 'Alphanumeric');
+      }
+    }
+  } else {
+    qr.addData(text);
+  }
+
   qr.make();
 
   const count = qr.getModuleCount();
