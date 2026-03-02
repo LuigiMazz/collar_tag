@@ -129,7 +129,7 @@ function TagEditor() {
             <h1 className="app-title">PawTag 3D</h1>
           </div>
           <p className="app-subtitle">
-            Digitalizza l'identità del tuo animale domestico. Sicuro, rapido, essenziale.
+            Crea una medaglietta intelligente per il tuo compagno d'avventure. 🐾
           </p>
 
           <div className="form-group">
@@ -139,46 +139,46 @@ function TagEditor() {
               type="text"
               value={name}
               maxLength={14}
-              placeholder="es. LUNA"
+              placeholder="LUNA"
               onChange={e => setName(e.target.value)}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">Primo numero di telefono</label>
+            <label htmlFor="phone">📞 Primo numero</label>
             <input
               id="phone"
               type="tel"
               value={phone}
               maxLength={16}
-              placeholder="es. 3331234567"
+              placeholder="333 123 4567"
               onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone2">Secondo numero (opzionale)</label>
+            <label htmlFor="phone2">📞 Secondo numero (opzionale)</label>
             <input
               id="phone2"
               type="tel"
               value={phone2}
               maxLength={16}
-              placeholder="es. 3337654321"
+              placeholder="333 765 4321"
               onChange={e => setPhone2(e.target.value.replace(/\D/g, ''))}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">Descrizione / Note mediche</label>
+            <label htmlFor="description">📝 Note mediche o caratteriali</label>
             <textarea
               id="description"
               value={description}
               maxLength={150}
               rows={3}
-              placeholder="es. Ha bisogno di farmaci per il cuore..."
+              placeholder="Esempio: Ha bisogno di farmaci..."
               onChange={e => setDescription(e.target.value)}
             />
-            <p className="hint" style={{ textAlign: 'right', fontSize: '0.7rem' }}>
+            <p className="hint" style={{ textAlign: 'right' }}>
               {description.length}/150
             </p>
           </div>
@@ -209,23 +209,20 @@ function TagEditor() {
             onClick={handleGenerate}
             disabled={loading}
           >
-            {loading ? 'Generazione in corso…' : 'Genera anteprima'}
+            {loading ? 'Sto lavorando...' : '✨ Genera anteprima'}
           </button>
 
           {hasMesh && (
             <button className="btn btn-secondary" onClick={handlePreviewCard}>
-              Anteprima pagina QR
+              👁️ Anteprima pagina QR
             </button>
           )}
 
           {hasMesh && (
             <div className="export-group">
               <button className="btn btn-export" onClick={handleExportSTL}>
-                Scarica STL
+                📥 Scarica STL
               </button>
-              {/* <button className="btn btn-export btn-3mf" onClick={handleExport3MF}>
-                Scarica 3MF bicolore
-              </button> */}
             </div>
           )}
 
@@ -234,15 +231,11 @@ function TagEditor() {
           <div className="about-section">
             <h3>Cos'è PawTag 3D?</h3>
             <p>
-              <strong>Mission:</strong> Sicurezza e portabilità per i tuoi amici a quattro zampe.
-              Crea medagliette personalizzate con QR code integrato per proteggere chi ami.
-            </p>
-            <p>
-              <strong>Privacy:</strong> Nessun database. I dati sono salvati direttamente nel codice QR,
-              garantendo massima privacy e zero costi di gestione.
+              Un progetto per la <strong>sicurezza</strong> dei nostri amici.
+              I dati sono salvati nel QR: nessuna registrazione, massima privacy.
             </p>
             <div className="creator-info">
-              Creato da <span>Luigi Mazzarella</span>
+              Fatto con ❤️ da <span>Luigi Mazzarella</span>
             </div>
           </div>
         </aside>

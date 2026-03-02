@@ -1,9 +1,32 @@
 /* ============================================================
-   App.css — Medaglietta 3D
-   Layout: sidebar sinistra + canvas destra (full-height)
+   PawTag 3D — Brand & Design System
    ============================================================ */
 
-/* Reset base */
+:root {
+  /* Colors - Warm & Friendly */
+  --bg: #F8F9FB;
+  --surface: #FFFFFF;
+  --surface-alt: #F1F3F6;
+  --primary: #FF7043;
+  /* Soft Coral */
+  --primary-hover: #F4511E;
+  --secondary: #4FB3AF;
+  /* Warm Teal */
+  --text: #2D3436;
+  --text-muted: #636E72;
+  --border: #E1E8ED;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Layout */
+  --sidebar-w: 360px;
+}
+
+/* Reset & Base */
 *,
 *::before,
 *::after {
@@ -12,33 +35,20 @@
   padding: 0;
 }
 
-:root {
-  --bg: #0f0f1a;
-  --surface: #1c1c2e;
-  --surface-alt: #26263a;
-  --border: #3a3a5c;
-  --gold: #ddc061;
-  --gold-light: #f0d060;
-  --text: #e8e8f0;
-  --text-muted: #8888aa;
-  --danger: #e05555;
-  --radius: 10px;
-  --sidebar-w: 320px;
-}
-
 html,
 body,
 #root {
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ============================================================
-   Layout principale
+   Layout
    ============================================================ */
 .app-container {
   display: flex;
@@ -47,151 +57,132 @@ body,
 }
 
 /* ============================================================
-   Sidebar
+   Sidebar (Control Panel)
    ============================================================ */
 .sidebar {
   width: var(--sidebar-w);
-  flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
-  padding: 24px 20px;
+  padding: 32px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   overflow-y: auto;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 4px;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
 .app-logo {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(221, 192, 97, 0.3));
 }
 
 .app-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 0.02em;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
 }
 
 .app-subtitle {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   line-height: 1.5;
 }
 
 /* ============================================================
-   Form
+   Forms & Inputs
    ============================================================ */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .form-group label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: none;
 }
 
 .form-group input[type="text"],
-.form-group input[type="tel"] {
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 9px 12px;
-  font-size: 0.95rem;
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.form-group input[type="text"]:focus,
-.form-group input[type="tel"]:focus,
-.form-group textarea:focus {
-  border-color: var(--gold);
-}
-
+.form-group input[type="tel"],
 .form-group textarea {
   background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 9px 12px;
-  font-size: 0.9rem;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 1rem;
   color: var(--text);
   outline: none;
-  resize: vertical;
+  transition: all 0.2s ease;
+  width: 100%;
   font-family: inherit;
-  transition: border-color 0.2s;
 }
 
-.form-group input[type="file"] {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.1);
 }
 
 .hint {
-  font-size: 0.73rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
+  margin-top: -4px;
 }
 
-/* Checkbox row */
 .form-check {
   flex-direction: row;
   align-items: center;
-  gap: 10px;
-}
-
-.form-check input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--gold);
+  gap: 12px;
+  background: var(--surface-alt);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
-.form-check label {
-  text-transform: none;
-  font-size: 0.88rem;
-  color: var(--text);
-  letter-spacing: 0;
+.form-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
   cursor: pointer;
 }
 
 /* ============================================================
-   Spec box
+   Special Boxes
    ============================================================ */
 .spec-box {
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
+  background: #FFF9F7;
+  border: 1px solid #FFEBE5;
+  border-radius: var(--radius-md);
+  padding: 16px;
 }
 
 .spec-box h3 {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--primary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
 }
 
 .spec-box ul {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .spec-box li {
@@ -201,53 +192,30 @@ body,
 
 .spec-box strong {
   color: var(--text);
+  display: block;
+  font-weight: 700;
 }
 
 /* ============================================================
-   Color toggle
+   Buttons
    ============================================================ */
-.form-check {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
+.btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-}
-
-/* ============================================================
-   Export group (STL + 3MF affiancati)
-   ============================================================ */
-.export-group {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.btn-3mf {
-  border-color: rgba(100, 180, 255, 0.5);
-  color: #80c8ff;
-}
-
-.btn-3mf:hover:not(:disabled) {
-  background: rgba(100, 180, 255, 0.08);
-  border-color: #80c8ff;
-}
-
-/* ============================================================
-   Bottoni
-   ============================================================ */
-.btn {
-  padding: 11px 16px;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  width: 100%;
-}
-
-.btn:active:not(:disabled) {
-  transform: scale(0.98);
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -256,104 +224,103 @@ body,
 }
 
 .btn-primary {
-  background: var(--gold);
-  color: #0f0f1a;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 112, 67, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--gold-light);
+  background: var(--primary-hover);
+  box-shadow: 0 6px 16px rgba(255, 112, 67, 0.3);
+}
+
+.btn-secondary {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #E5E9F0;
 }
 
 .btn-export {
-  background: transparent;
-  color: var(--gold);
-  border: 1.5px solid var(--gold);
+  background: var(--surface);
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
 }
 
 .btn-export:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--secondary);
+  color: white;
+}
+
+.export-group {
+  display: flex;
+  gap: 12px;
 }
 
 /* ============================================================
-   Messaggio errore
+   About / Info Section
    ============================================================ */
-.error-msg {
-  font-size: 0.82rem;
-  color: var(--danger);
-  background: rgba(224, 85, 85, 0.1);
-  border: 1px solid rgba(224, 85, 85, 0.3);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  line-height: 1.4;
+.about-section {
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.about-section h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.about-section p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.creator-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.creator-info span {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 /* ============================================================
-   Canvas wrapper
+   Canvas Wrapper & Desktop Preview
    ============================================================ */
 .canvas-wrapper {
   flex: 1;
   position: relative;
-  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F1F3F6 100%);
 }
 
 .canvas-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 1rem;
   text-align: center;
-  padding: 24px;
-  line-height: 1.6;
+  padding: 40px;
+  gap: 20px;
+}
+
+.canvas-placeholder p {
+  max-width: 300px;
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 /* ============================================================
-   Bottone secondario (anteprima pagina QR)
-   ============================================================ */
-.btn-secondary {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1.5px solid var(--border);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  color: var(--text);
-  border-color: var(--text-muted);
-}
-
-/* ============================================================
-   Info box QR
-   ============================================================ */
-.qr-info-box {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  background: rgba(212, 175, 55, 0.07);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-}
-
-.qr-info-icon {
-  font-size: 1rem;
-  flex-shrink: 0;
-  line-height: 1.5;
-}
-
-.qr-info-box p {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.qr-info-box strong {
-  color: var(--gold);
-}
-
-/* ============================================================
-   PetCard — pagina scansione QR
+   Pet Card (The Result Page)
    ============================================================ */
 .petcard-overlay {
   min-height: 100vh;
@@ -361,161 +328,102 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  background: var(--bg);
   padding: 24px;
 }
 
 .petcard {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 40px 32px;
-  max-width: 380px;
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  max-width: 420px;
   width: 100%;
   text-align: center;
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  gap: 24px;
 }
 
 .petcard-paw {
-  font-size: 3rem;
-  line-height: 1;
+  font-size: 4rem;
+  color: var(--primary);
+  filter: drop-shadow(0 4px 8px rgba(255, 112, 67, 0.2));
 }
 
 .petcard-name {
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: var(--gold);
-  letter-spacing: 0.04em;
-  margin: 0;
-}
-
-.petcard-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 0;
-}
-
-.petcard-phone {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 900;
   color: var(--text);
-  text-decoration: none;
-  letter-spacing: 0.02em;
-}
-
-.petcard-phone:hover {
-  color: var(--gold);
-}
-
-.petcard-call-btn {
-  display: inline-block;
-  background: var(--gold);
-  color: #0f0f1a;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 14px 32px;
-  border-radius: var(--radius);
-  text-decoration: none;
-  transition: background 0.15s;
-  margin-top: 4px;
-}
-
-.petcard-call-btn:hover {
-  background: var(--gold-light);
+  letter-spacing: -0.04em;
 }
 
 .petcard-description {
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 1rem;
+  color: var(--text-muted);
   line-height: 1.6;
-  margin: 8px 0;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 12px 16px;
-  border-radius: 12px;
-  width: 100%;
+  background: var(--surface-alt);
+  padding: 16px;
+  border-radius: var(--radius-md);
 }
 
 .petcard-contacts {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  margin: 16px 0;
+  gap: 16px;
 }
 
 .contact-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  background: var(--surface-alt);
-  border-radius: 16px;
-  border: 1px solid var(--border);
-}
-
-.petcard-footer {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-top: 16px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-
-/* ============================================================
-   About Section
-   ============================================================ */
-.about-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px dashed var(--border);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: all 0.2s ease;
 }
 
-.about-section h3 {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--gold);
+.contact-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.petcard-label {
+  font-size: 0.8rem;
+  font-weight: 800;
   text-transform: uppercase;
+  color: var(--text-muted);
   letter-spacing: 0.05em;
 }
 
-.about-section p {
-  font-size: 0.8rem;
+.petcard-phone {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.petcard-call-btn {
+  background: var(--primary);
+  color: white;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.petcard-footer {
+  font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.5;
-}
-
-.about-section strong {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.creator-info {
-  margin-top: 8px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.creator-info span {
-  color: var(--gold);
-  font-style: normal;
-  font-weight: 600;
+  margin-top: 16px;
 }
 
 /* ============================================================
-   Modal Tutorial
+   Modal
    ============================================================ */
 .modal-overlay {
   position: fixed;
@@ -523,133 +431,57 @@ body,
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 15, 26, 0.9);
-  backdrop-filter: blur(4px);
+  background: rgba(45, 52, 54, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
   z-index: 1000;
-  padding: 20px;
 }
 
 .modal-content {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  max-width: 500px;
+  border-radius: var(--radius-lg);
+  max-width: 560px;
   width: 100%;
-  padding: 32px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.modal-content h2 {
-  font-size: 1.5rem;
-  color: var(--gold);
-  margin: 0;
+  gap: 24px;
 }
 
 .tutorial-text {
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 1rem;
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
-.tutorial-info-box {
-  background: rgba(221, 192, 97, 0.1);
-  border: 1px solid var(--gold);
-  border-radius: 8px;
-  padding: 12px 16px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.tutorial-info-box .info-icon {
-  font-size: 1.2rem;
-}
-
-.tutorial-info-box p {
-  font-size: 0.85rem;
+.tutorial-text strong {
   color: var(--text);
-  margin: 0;
-  line-height: 1.4;
 }
 
-.tutorial-info-box strong {
-  color: var(--gold);
+.tutorial-info-box {
+  background: #EBF7F6;
+  border-left: 4px solid var(--secondary);
+  padding: 16px;
+  border-radius: 4px var(--radius-md) var(--radius-md) 4px;
 }
 
 .tutorial-media-container {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tutorial-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.modal-actions .btn {
-  flex: 1;
+  box-shadow: var(--shadow-md);
 }
 
 /* ============================================================
-   Responsive: mobile (sidebar sopra, canvas sotto)
+   Mobile Adjustments
    ============================================================ */
-@media (max-width: 700px) {
-  .modal-overlay {
-    padding: 0;
-  }
-
-  .modal-content {
-    max-width: none;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-    padding: 20px;
-    gap: 16px;
-    justify-content: flex-start;
-    overflow-y: auto;
-  }
-
-  .modal-content h2 {
-    font-size: 1.3rem;
-    margin-top: 10px;
-  }
-
-  .tutorial-media-container {
-    aspect-ratio: auto;
-    flex: 1;
-    min-height: 40vh;
-  }
-
+@media (max-width: 900px) {
   .app-container {
     flex-direction: column;
     height: auto;
-    min-height: 100vh;
-    overflow: auto;
-  }
-
-  html,
-  body,
-  #root {
     overflow: auto;
   }
 
@@ -660,7 +492,21 @@ body,
   }
 
   .canvas-wrapper {
-    height: 60vw;
-    min-height: 260px;
+    height: 70vh;
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    padding: 24px 16px;
+  }
+
+  .modal-content {
+    padding: 24px 16px;
+  }
+
+  .export-group {
+    flex-direction: column;
   }
 }

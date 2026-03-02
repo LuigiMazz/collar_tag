@@ -69,7 +69,7 @@ export default function TagScene({ mesh, autoRotate = false }) {
     <Canvas
       shadows
       camera={{ position: [0, 0, 55], fov: 42, near: 0.1, far: 500 }}
-      style={{ width: '100%', height: '100%', background: '#12121f' }}
+      style={{ width: '100%', height: '100%', background: 'transparent' }}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
     >
       <Lights />
