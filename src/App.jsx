@@ -1,5 +1,4 @@
 
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import TagScene from './components/TagScene';
 import PetCard from './components/PetCard';
@@ -119,180 +118,198 @@ function TagEditor() {
   const hasMesh = mesh && !loading;
 
   return (
-    <div className="app-container">
-      {/* ---------------------------------------------------------------- */}
-      {/* Sidebar                                                           */}
-      {/* ---------------------------------------------------------------- */}
-      <aside className="sidebar">
-        <h1 className="app-title">PawTag 3D</h1>
-        <p className="app-subtitle">
-          Digitalizza l'identità del tuo animale domestico. Sicuro, rapido, essenziale.
-        </p>
-        <div className="form-group">
-          <label htmlFor="animal-name">Nome animale</label>
-          <input
-            id="animal-name"
-            type="text"
-            value={name}
-            maxLength={14}
-            placeholder="es. LUNA"
-            onChange={e => setName(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="phone">Primo numero di telefono</label>
-          <input
-            id="phone"
-            type="tel"
-            value={phone}
-            maxLength={16}
-            placeholder="es. 3331234567"
-            onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="phone2">Secondo numero (opzionale)</label>
-          <input
-            id="phone2"
-            type="tel"
-            value={phone2}
-            maxLength={16}
-            placeholder="es. 3337654321"
-            onChange={e => setPhone2(e.target.value.replace(/\D/g, ''))}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Descrizione / Note mediche</label>
-          <textarea
-            id="description"
-            value={description}
-            maxLength={150}
-            rows={3}
-            placeholder="es. Ha bisogno di farmaci per il cuore..."
-            onChange={e => setDescription(e.target.value)}
-          />
-          <p className="hint" style={{ textAlign: 'right', fontSize: '0.7rem' }}>
-            {description.length}/150
-          </p>
-        </div>
-
-
-        <div className="form-group form-check">
-          <input
-            id="auto-rotate"
-            type="checkbox"
-            checked={autoRot}
-            onChange={e => setAutoRot(e.target.checked)}
-          />
-          <label htmlFor="auto-rotate">Rotazione automatica</label>
-        </div>
-
-        <div className="spec-box">
-          <h3>Specifiche</h3>
-          <ul>
-            <li>Diametro: <strong>30 mm</strong></li>
-            <li>Spessore: <strong>3.6 mm</strong></li>
-            <li>Foro: <strong>Ø 4 mm</strong></li>
-            <li>Incisione: <strong>1.0 mm</strong></li>
-          </ul>
-        </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={handleGenerate}
-          disabled={loading}
-        >
-          {loading ? 'Generazione in corso…' : 'Genera anteprima'}
-        </button>
-
-        {hasMesh && (
-          <button className="btn btn-secondary" onClick={handlePreviewCard}>
-            Anteprima pagina QR
-          </button>
-        )}
-
-        {hasMesh && (
-          <div className="export-group">
-            <button className="btn btn-export" onClick={handleExportSTL}>
-              Scarica STL
-            </button>
-            {/* <button className="btn btn-export btn-3mf" onClick={handleExport3MF}>
-              Scarica 3MF bicolore
-            </button> */}
+    <>
+      <div className="app-container">
+        {/* ---------------------------------------------------------------- */}
+        {/* Sidebar                                                           */}
+        {/* ---------------------------------------------------------------- */}
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <img src="/logo.png" alt="PawTag Logo" className="app-logo" />
+            <h1 className="app-title">PawTag 3D</h1>
           </div>
-        )}
-
-        {error && <p className="error-msg">{error}</p>}
-
-        <div className="about-section">
-          <h3>Cos'è PawTag 3D?</h3>
-          <p>
-            <strong>Mission:</strong> Sicurezza e portabilità per i tuoi amici a quattro zampe.
-            Crea medagliette personalizzate con QR code integrato per proteggere chi ami.
+          <p className="app-subtitle">
+            Digitalizza l'identità del tuo animale domestico. Sicuro, rapido, essenziale.
           </p>
-          <p>
-            <strong>Privacy:</strong> Nessun database. I dati sono salvati direttamente nel codice QR,
-            garantendo massima privacy e zero costi di gestione.
-          </p>
-          <div className="creator-info">
-            Creato da <span>Luigi Mazzarella</span>
+
+          <div className="form-group">
+            <label htmlFor="animal-name">Nome animale</label>
+            <input
+              id="animal-name"
+              type="text"
+              value={name}
+              maxLength={14}
+              placeholder="es. LUNA"
+              onChange={e => setName(e.target.value)}
+            />
           </div>
-        </div>
-      </aside>
 
-      <main className="canvas-wrapper">
-        {mesh ? (
-          <TagScene mesh={mesh} autoRotate={autoRot} />
-        ) : (
-          <div className="canvas-placeholder">
-            <p>
-              {loading
-                ? 'Costruzione geometria CSG in corso…'
-                : 'Compila nome e telefono, poi clicca "Genera anteprima"'}
+          <div className="form-group">
+            <label htmlFor="phone">Primo numero di telefono</label>
+            <input
+              id="phone"
+              type="tel"
+              value={phone}
+              maxLength={16}
+              placeholder="es. 3331234567"
+              onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone2">Secondo numero (opzionale)</label>
+            <input
+              id="phone2"
+              type="tel"
+              value={phone2}
+              maxLength={16}
+              placeholder="es. 3337654321"
+              onChange={e => setPhone2(e.target.value.replace(/\D/g, ''))}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Descrizione / Note mediche</label>
+            <textarea
+              id="description"
+              value={description}
+              maxLength={150}
+              rows={3}
+              placeholder="es. Ha bisogno di farmaci per il cuore..."
+              onChange={e => setDescription(e.target.value)}
+            />
+            <p className="hint" style={{ textAlign: 'right', fontSize: '0.7rem' }}>
+              {description.length}/150
             </p>
           </div>
-        )}
 
-        {showTutorial && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2>Preparazione alla stampa 3D</h2>
-              <p className="tutorial-text">
-                Per ottenere un risultato bicolore perfetto con il file STL:
-                <br /><br />
-                Nello slicer (es. Bambu Studio o PrusaSlicer),
-                usa lo strumento <strong>"Dipingi"</strong> (Paint Tool)
-                per colorare solo i quadratini in rilievo del QR code.
-              </p>
 
-              <div className="tutorial-media-placeholder">
-                {/* Qui andrà la GIF del tutorial */}
-                <div className="media-placeholder-text">
-                  [Video Tutorial in caricamento...]
-                </div>
-              </div>
+          <div className="form-group form-check">
+            <input
+              id="auto-rotate"
+              type="checkbox"
+              checked={autoRot}
+              onChange={e => setAutoRot(e.target.checked)}
+            />
+            <label htmlFor="auto-rotate">Rotazione automatica</label>
+          </div>
 
-              <div className="modal-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowTutorial(false)}
-                >
-                  Annulla
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={triggerDownloadSTL}
-                >
-                  Scarica STL ora
-                </button>
-              </div>
+          <div className="spec-box">
+            <h3>Specifiche</h3>
+            <ul>
+              <li>Diametro: <strong>30 mm</strong></li>
+              <li>Spessore: <strong>3.6 mm</strong></li>
+              <li>Foro: <strong>Ø 4 mm</strong></li>
+              <li>Incisione: <strong>1.0 mm</strong></li>
+            </ul>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={handleGenerate}
+            disabled={loading}
+          >
+            {loading ? 'Generazione in corso…' : 'Genera anteprima'}
+          </button>
+
+          {hasMesh && (
+            <button className="btn btn-secondary" onClick={handlePreviewCard}>
+              Anteprima pagina QR
+            </button>
+          )}
+
+          {hasMesh && (
+            <div className="export-group">
+              <button className="btn btn-export" onClick={handleExportSTL}>
+                Scarica STL
+              </button>
+              {/* <button className="btn btn-export btn-3mf" onClick={handleExport3MF}>
+                Scarica 3MF bicolore
+              </button> */}
+            </div>
+          )}
+
+          {error && <p className="error-msg">{error}</p>}
+
+          <div className="about-section">
+            <h3>Cos'è PawTag 3D?</h3>
+            <p>
+              <strong>Mission:</strong> Sicurezza e portabilità per i tuoi amici a quattro zampe.
+              Crea medagliette personalizzate con QR code integrato per proteggere chi ami.
+            </p>
+            <p>
+              <strong>Privacy:</strong> Nessun database. I dati sono salvati direttamente nel codice QR,
+              garantendo massima privacy e zero costi di gestione.
+            </p>
+            <div className="creator-info">
+              Creato da <span>Luigi Mazzarella</span>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        </aside>
+
+        <main className="canvas-wrapper">
+          {mesh ? (
+            <TagScene mesh={mesh} autoRotate={autoRot} />
+          ) : (
+            <div className="canvas-placeholder">
+              <p>
+                {loading
+                  ? 'Costruzione geometria CSG in corso…'
+                  : 'Compila nome e telefono, poi clicca "Genera anteprima"'}
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {showTutorial && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Preparazione alla stampa 3D</h2>
+            <p className="tutorial-text">
+              Per ottenere un risultato bicolore perfetto con il file STL:
+              <br /><br />
+              Nello slicer (es. Bambu Studio o PrusaSlicer),
+              usa lo strumento <strong>"Dipingi"</strong> (Paint Tool),
+              seleziona il tipo di tool <strong>"Height Range"</strong> e imposta l'altezza a <strong> 1 mm</strong>,
+              poi spostati alla base del qrcode o imposta l'altezza a <strong>2,61 mm</strong> e colora tutto il resto.
+            </p>
+
+            <div className="tutorial-info-box">
+              <span className="info-icon">💡</span>
+              <p><strong>INFO:</strong> È consigliabile usare un <strong>ugello da 0.2mm</strong> per una massima leggibilità.</p>
+            </div>
+
+            <div className="tutorial-media-container">
+              <video
+                src="/tutorial.mov"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="tutorial-video"
+              >
+                Il tuo browser non supporta il tag video.
+              </video>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowTutorial(false)}
+              >
+                Annulla
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={triggerDownloadSTL}
+              >
+                Scarica STL ora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
