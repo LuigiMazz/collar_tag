@@ -457,6 +457,50 @@ body,
 }
 
 /* ============================================================
+   About Section
+   ============================================================ */
+.about-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-section h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.about-section p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.about-section strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.creator-info {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.creator-info span {
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ============================================================
    Responsive: mobile (sidebar sopra, canvas sotto)
    ============================================================ */
 @media (max-width: 700px) {

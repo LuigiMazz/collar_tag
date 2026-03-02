@@ -229,6 +229,21 @@ function TagEditor() {
         )}
 
         {error && <p className="error-msg">{error}</p>}
+
+        <div className="about-section">
+          <h3>Cos'è PawTag 3D?</h3>
+          <p>
+            <strong>Mission:</strong> Sicurezza e portabilità per i tuoi amici a quattro zampe.
+            Crea medagliette personalizzate con QR code integrato per proteggere chi ami.
+          </p>
+          <p>
+            <strong>Privacy:</strong> Nessun database. I dati sono salvati direttamente nel codice QR,
+            garantendo massima privacy e zero costi di gestione.
+          </p>
+          <div className="creator-info">
+            Creato da <span>Luigi Mazzarella</span>
+          </div>
+        </div>
       </aside>
 
       <main className="canvas-wrapper">
