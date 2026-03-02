@@ -1,0 +1,461 @@
+/* ============================================================
+   App.css — Medaglietta 3D
+   Layout: sidebar sinistra + canvas destra (full-height)
+   ============================================================ */
+
+/* Reset base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:          #0f0f1a;
+  --surface:     #1c1c2e;
+  --surface-alt: #26263a;
+  --border:      #3a3a5c;
+  --gold:        #d4af37;
+  --gold-light:  #f0d060;
+  --text:        #e8e8f0;
+  --text-muted:  #8888aa;
+  --danger:      #e05555;
+  --radius:      10px;
+  --sidebar-w:   320px;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ============================================================
+   Layout principale
+   ============================================================ */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ============================================================
+   Sidebar
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.app-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+
+.app-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Form
+   ============================================================ */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"] {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 0.95rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="tel"]:focus {
+  border-color: var(--gold);
+}
+
+.hint {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+/* Checkbox row */
+.form-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.form-check label {
+  text-transform: none;
+  font-size: 0.88rem;
+  color: var(--text);
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Spec box
+   ============================================================ */
+.spec-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.spec-box h3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.spec-box ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-box li {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.spec-box strong {
+  color: var(--text);
+}
+
+/* ============================================================
+   Color toggle
+   ============================================================ */
+.color-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.color-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.color-btn.active {
+  border-color: var(--gold);
+  color: var(--text);
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Export group (STL + 3MF affiancati)
+   ============================================================ */
+.export-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-3mf {
+  border-color: rgba(100, 180, 255, 0.5);
+  color: #80c8ff;
+}
+
+.btn-3mf:hover:not(:disabled) {
+  background: rgba(100, 180, 255, 0.08);
+  border-color: #80c8ff;
+}
+
+/* ============================================================
+   Bottoni
+   ============================================================ */
+.btn {
+  padding: 11px 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  width: 100%;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: #0f0f1a;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--gold-light);
+}
+
+.btn-export {
+  background: transparent;
+  color: var(--gold);
+  border: 1.5px solid var(--gold);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* ============================================================
+   Messaggio errore
+   ============================================================ */
+.error-msg {
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: rgba(224, 85, 85, 0.1);
+  border: 1px solid rgba(224, 85, 85, 0.3);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Canvas wrapper
+   ============================================================ */
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+  text-align: center;
+  padding: 24px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Bottone secondario (anteprima pagina QR)
+   ============================================================ */
+.btn-secondary {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* ============================================================
+   Info box QR
+   ============================================================ */
+.qr-info-box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(212, 175, 55, 0.07);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.qr-info-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.qr-info-box p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.qr-info-box strong {
+  color: var(--gold);
+}
+
+/* ============================================================
+   PetCard — pagina scansione QR
+   ============================================================ */
+.petcard-overlay {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  padding: 24px;
+}
+
+.petcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 32px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.petcard-paw {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.petcard-name {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.petcard-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.petcard-phone {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.petcard-phone:hover {
+  color: var(--gold);
+}
+
+.petcard-call-btn {
+  display: inline-block;
+  background: var(--gold);
+  color: #0f0f1a;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 14px 32px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+
+.petcard-call-btn:hover {
+  background: var(--gold-light);
+}
+
+.petcard-footer {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   Responsive: mobile (sidebar sopra, canvas sotto)
+   ============================================================ */
+@media (max-width: 700px) {
+  .app-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  html, body, #root {
+    overflow: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .canvas-wrapper {
+    height: 60vw;
+    min-height: 260px;
+  }
+}
