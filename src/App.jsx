@@ -13,12 +13,22 @@ function readCardHash() {
   const hash = window.location.hash;
   if (!hash.startsWith('#card?')) return null;
   const qs = new URLSearchParams(hash.slice(6));
-  return { name: qs.get('n') || '', phone: qs.get('p') || '' };
+  return {
+    name: qs.get('n') || '',
+    phone: qs.get('p') || '',
+    phone2: qs.get('p2') || '',
+    description: qs.get('d') || ''
+  };
 }
 
-function buildCardUrl(name, phone) {
+function buildCardUrl(name, phone, phone2, description) {
   const base = window.location.origin + window.location.pathname;
-  const params = new URLSearchParams({ n: name.trim(), p: phone.trim() });
+  const params = new URLSearchParams();
+  if (name) params.set('n', name.trim());
+  if (phone) params.set('p', phone.trim());
+  if (phone2) params.set('p2', phone2.trim());
+  if (description) params.set('d', description.trim());
+
   return `${base}#card?${params}`;
 }
 
@@ -32,7 +42,14 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  if (cardParams) return <PetCard name={cardParams.name} phone={cardParams.phone} />;
+  if (cardParams) return (
+    <PetCard
+      name={cardParams.name}
+      phone={cardParams.phone}
+      phone2={cardParams.phone2}
+      description={cardParams.description}
+    />
+  );
   return <TagEditor />;
 }
 
@@ -44,7 +61,9 @@ const COLOR_OPTIONS = [
 
 function TagEditor() {
   const [name, setName] = useState('LUNA');
-  const [phone, setPhone] = useState('+39 333 1234567');
+  const [phone, setPhone] = useState('3331234567');
+  const [phone2, setPhone2] = useState('');
+  const [description, setDescription] = useState('');
   const [autoRot, setAutoRot] = useState(true);
   const [colorKey, setColorKey] = useState('white');
   const [mesh, setMesh] = useState(null);
@@ -65,9 +84,9 @@ function TagEditor() {
     try {
       await new Promise(r => setTimeout(r, 50));
 
-      const url = buildCardUrl(name, phone);
+      const url = buildCardUrl(name, phone, phone2, description);
       const qrMatrix = generateQRMatrix(url, 0, 'L');
-      const newMesh = buildTagMesh(qrMatrix, name, phone, colorKey);
+      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, colorKey);
 
       meshRef.current = newMesh;
       setMesh(newMesh);
@@ -78,7 +97,7 @@ function TagEditor() {
     } finally {
       setLoading(false);
     }
-  }, [name, phone, colorKey]);
+  }, [name, phone, phone2, description, colorKey]);
 
   const handleExportSTL = useCallback(() => {
     if (!meshRef.current) return;
@@ -93,8 +112,9 @@ function TagEditor() {
   }, [name, colorKey]);
 
   const handlePreviewCard = useCallback(() => {
-    if (cardUrl) window.open(cardUrl, '_blank');
-  }, [cardUrl]);
+    const url = buildCardUrl(name, phone, phone2, description);
+    window.open(url, '_blank');
+  }, [name, phone, phone2, description]);
 
   const hasMesh = mesh && !loading;
 
@@ -122,15 +142,42 @@ function TagEditor() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="phone">Numero di telefono</label>
+          <label htmlFor="phone">Primo numero di telefono</label>
           <input
             id="phone"
             type="tel"
             value={phone}
             maxLength={16}
-            placeholder="es. +39 333 1234567"
-            onChange={e => setPhone(e.target.value)}
+            placeholder="es. 3331234567"
+            onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="phone2">Secondo numero (opzionale)</label>
+          <input
+            id="phone2"
+            type="tel"
+            value={phone2}
+            maxLength={16}
+            placeholder="es. 3337654321"
+            onChange={e => setPhone2(e.target.value.replace(/\D/g, ''))}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="description">Descrizione / Note mediche</label>
+          <textarea
+            id="description"
+            value={description}
+            maxLength={150}
+            rows={3}
+            placeholder="es. Ha bisogno di farmaci per il cuore..."
+            onChange={e => setDescription(e.target.value)}
+          />
+          <p className="hint" style={{ textAlign: 'right', fontSize: '0.7rem' }}>
+            {description.length}/150
+          </p>
         </div>
 
         {/* Colore medaglietta */}

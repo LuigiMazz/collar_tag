@@ -11,7 +11,7 @@
 
 import { STLExporter } from 'three-stdlib';
 import * as THREE from 'three';
-import { TAG } from './geometry.js';
+import { TAG, mergeGeos } from './geometry.js';
 
 const stlExporter = new STLExporter();
 
@@ -27,32 +27,14 @@ export function exportSTL(tagMesh, filename = 'medaglietta') {
     .filter(Boolean)
     .map(geoToZ0);
 
-  const geo = mergePositions(geos);
+  if (geos.length === 0) return;
+
+  const geo = mergeGeos(geos);
   const exportMesh = new THREE.Mesh(geo);
   const stlData = stlExporter.parse(exportMesh, { binary: true });
   downloadBlob(stlData, `${filename}.stl`, 'application/octet-stream');
 }
 
-// Merge semplice di N geometrie non-indexed
-function mergePositions(geos) {
-  let total = 0;
-  for (const g of geos) total += g.attributes.position.count;
-  const positions = new Float32Array(total * 3);
-  let off = 0;
-  for (const g of geos) {
-    const pos = g.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      positions[(off + i) * 3] = pos.getX(i);
-      positions[(off + i) * 3 + 1] = pos.getY(i);
-      positions[(off + i) * 3 + 2] = pos.getZ(i);
-    }
-    off += pos.count;
-  }
-  const out = new THREE.BufferGeometry();
-  out.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  out.computeVertexNormals();
-  return out;
-}
 
 // ---------------------------------------------------------------------------
 // export3MF
@@ -269,6 +251,9 @@ function downloadBlob(data, filename, mimeType) {
   const blob = new Blob([data], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = url; link.download = filename; link.click();
+  link.href = url;
+  link.download = filename;
+  link.target = '_blank'; // Try to bypass some insecure download blocks
+  link.click();
   URL.revokeObjectURL(url);
 }

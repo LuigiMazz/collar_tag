@@ -37,7 +37,7 @@ export const TAG = {
   qrSize: 20,     // dimensione area QR in mm
   qrYOffset: -1,     // offset verticale QR (schiva il foro)
   textW: 24,     // larghezza area testo
-  textH: 12,     // altezza area testo
+  textH: 15,     // altezza area testo
   textYOffset: -2,     // offset verticale testo
 };
 
@@ -85,10 +85,11 @@ function buildBase(discShape) {
 const RAISE = TAG.engraveDepth;  // 1.0mm altezza rilievo (inciso profondamente nel bicolore)
 
 // Corpo export: spessore centrale senza i due strati di incisione
-function buildBodyExport() {
-  const h = TAG.thickness - RAISE * 2;
-  const geo = new THREE.ExtrudeGeometry(makeDiscShape(), { ...EXTRUDE, depth: h });
-  geo.translate(0, 0, -(h / 2));               // centrato: z=-(h/2) → z=+(h/2)
+function buildBodyExport(discShape) {
+  const depth = TAG.thickness - RAISE * 2;
+  const geo = new THREE.ExtrudeGeometry(discShape, { ...EXTRUDE, depth });
+  geo.translate(0, 0, -depth / 2);
+  geo.computeVertexNormals();
   return geo;
 }
 
@@ -96,21 +97,25 @@ function buildBodyExport() {
 // Stessa logica di buildFrontBorder per le celle QR, ma sul retro con pixel testo.
 // Il corpo export (buildBodyExport) copre lo spessore centrale;
 // questo strato copre il retro tranne dove c'è il testo → testo negativo.
-function buildBackCapExport(name, phone) {
+function buildBackCapExport(name, phone, phone2) {
   const shape = cloneShapeWithHole(makeDiscShape());
 
-  const lines = [name.toUpperCase().slice(0, 16), phone.slice(0, 16)];
+  const lines = [
+    name.toUpperCase().slice(0, 16),
+    phone.slice(0, 16),
+    phone2 ? phone2.slice(0, 16) : null
+  ].filter(Boolean);
 
   const maxLen = Math.max(...lines.map(l => l.length), 1);
   const totalPixCols = maxLen * FONT_COLS + (maxLen - 1) * FONT_COL_GAP;
-  const totalPixRows = FONT_ROWS * 2 + FONT_ROW_GAP;
+  const totalPixRows = lines.length * FONT_ROWS + (lines.length - 1) * FONT_ROW_GAP;
   const cellMm = Math.min(TAG.textW / totalPixCols, TAG.textH / totalPixRows);
 
-  const yOffsetFromCenter = (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
-  const yCenters = [
-    TAG.textYOffset + yOffsetFromCenter,
-    TAG.textYOffset - yOffsetFromCenter,
-  ];
+  const yCenters = [];
+  const startY = TAG.textYOffset + (lines.length - 1) * (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
+  for (let i = 0; i < lines.length; i++) {
+    yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
+  }
 
   const half = cellMm * 0.45;
 
@@ -270,24 +275,28 @@ const BITMAP_FONT = {
 // Ogni lettera è un grid di cubetti, come le celle QR.
 // X-mirroring incorporato nella posizione dei pixel (no post-process di winding).
 // ---------------------------------------------------------------------------
-function buildTextPixels(name, phone) {
+function buildTextPixels(name, phone, phone2) {
   const z0 = -(TAG.thickness / 2);  // -1.75: faccia retro del disco
   const depth = RAISE;                  // 0.4mm
 
-  const lines = [name.toUpperCase().slice(0, 16), phone.slice(0, 16)];
+  const lines = [
+    name.toUpperCase().slice(0, 16),
+    phone.slice(0, 16),
+    phone2 ? phone2.slice(0, 16) : null
+  ].filter(Boolean);
 
-  // Calcola cellMm per fittare entrambe le righe nell'area textW × textH
+  // Calcola cellMm per fittare tutte le righe nell'area textW × textH
   const maxLen = Math.max(...lines.map(l => l.length), 1);
   const totalPixCols = maxLen * FONT_COLS + (maxLen - 1) * FONT_COL_GAP;
-  const totalPixRows = FONT_ROWS * 2 + FONT_ROW_GAP;
+  const totalPixRows = lines.length * FONT_ROWS + (lines.length - 1) * FONT_ROW_GAP;
   const cellMm = Math.min(TAG.textW / totalPixCols, TAG.textH / totalPixRows);
 
-  // Centri Y delle due righe (simmetrico attorno a TAG.textYOffset)
-  const yOffsetFromCenter = (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
-  const yCenters = [
-    TAG.textYOffset + yOffsetFromCenter,   // riga 0 (nome)
-    TAG.textYOffset - yOffsetFromCenter,   // riga 1 (telefono)
-  ];
+  // Centri Y delle linee (dinamico per 1, 2 o 3 righe)
+  const yCenters = [];
+  const startY = TAG.textYOffset + (lines.length - 1) * (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
+  for (let i = 0; i < lines.length; i++) {
+    yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
+  }
 
   const half = cellMm * 0.45;  // mezzo lato pixel (5% di gap per chiarezza)
   const geos = [];
@@ -434,7 +443,7 @@ function addRectHole(shape, cx, cy, w, h) {
 }
 
 /** Merge array di BufferGeometry in una singola geometria non-indexed */
-function mergeGeos(geos) {
+export function mergeGeos(geos) {
   if (geos.length === 0) return new THREE.BufferGeometry();
 
   const nonIndexed = geos.map(g => {
@@ -444,7 +453,10 @@ function mergeGeos(geos) {
   });
 
   let totalVerts = 0;
-  for (const g of nonIndexed) totalVerts += g.attributes.position.count;
+  for (const g of nonIndexed) {
+    const count = g.attributes.position.count;
+    totalVerts += Math.floor(count / 3) * 3;
+  }
 
   const positions = new Float32Array(totalVerts * 3);
   const normals = new Float32Array(totalVerts * 3);
@@ -453,7 +465,8 @@ function mergeGeos(geos) {
   for (const g of nonIndexed) {
     const pos = g.attributes.position;
     const nrm = g.attributes.normal;
-    for (let i = 0; i < pos.count; i++) {
+    const count = Math.floor(pos.count / 3) * 3;
+    for (let i = 0; i < count; i++) {
       positions[(vOff + i) * 3] = pos.getX(i);
       positions[(vOff + i) * 3 + 1] = pos.getY(i);
       positions[(vOff + i) * 3 + 2] = pos.getZ(i);
@@ -463,7 +476,7 @@ function mergeGeos(geos) {
         normals[(vOff + i) * 3 + 2] = nrm.getZ(i);
       }
     }
-    vOff += pos.count;
+    vOff += count;
   }
 
   const merged = new THREE.BufferGeometry();
@@ -480,11 +493,12 @@ function mergeGeos(geos) {
  * Costruisce la mesh della medaglietta (senza CSG).
  *
  * @param {number[][]} qrModules
- * @param {string}     animalName
+ * @param {string}     name
  * @param {string}     phone
+ * @param {string}     phone2
  * @param {'white'|'gold'} [colorKey='white']
  */
-export function buildTagMesh(qrModules, animalName, phone, colorKey = 'white') {
+export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white') {
   const matOpts = MATERIALS[colorKey] ?? MATERIALS.white;
   const material = new THREE.MeshStandardMaterial(matOpts);
 
@@ -497,7 +511,7 @@ export function buildTagMesh(qrModules, animalName, phone, colorKey = 'white') {
 
   // --- Geometrie del riempimento (Colore 2) ---
   const qrFillGeo = buildQRFill(qrModules);
-  const textFillGeo = buildTextFill(animalName, phone);
+  const textFillGeo = buildTextPixels(name, phone, phone2);
 
   const allBodyGeos = [baseGeo, frontBorderGeo, backBorderGeo].map(g => {
     const ni = g.index ? g.toNonIndexed() : g.clone();
@@ -542,8 +556,8 @@ export function buildTagMesh(qrModules, animalName, phone, colorKey = 'white') {
   }
 
   // Geometrie per STL: corpo centrale + back cap con fori testo + QR sporgente
-  const exportBody = buildBodyExport();
-  const exportBackCap = buildBackCapExport(animalName, phone);
+  const exportBody = buildBodyExport(discShape);
+  const exportBackCap = buildBackCapExport(name, phone, phone2);
   const exportQR = buildQRFillExport(qrModules);
 
   group._bodyGeoExport = exportBody;
@@ -553,7 +567,7 @@ export function buildTagMesh(qrModules, animalName, phone, colorKey = 'white') {
   // Geometrie per 3MF: corpo pieno 3.5mm + QR pilastro + testo in rilievo (overlap → bicolore)
   const body3mf = build3MFBody();
   const qr3mf = build3MFQRFill(qrModules);
-  const text3mf = build3MFTextFill(animalName, phone);
+  const text3mf = buildTextPixels(name, phone, phone2);
 
   group._body3MF = body3mf;
   group._qrFill3MF = qr3mf.attributes.position?.count > 0 ? qr3mf : null;
