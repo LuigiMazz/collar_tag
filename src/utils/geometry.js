@@ -34,8 +34,8 @@ export const TAG = {
   holeY: 12,     // posizione Y del foro (vicino al bordo superiore)
   engraveDepth: 1.0,    // profondità incisione
   segments: 64,     // segmenti per archi circolari
-  qrSize: 20,     // dimensione area QR in mm
-  qrYOffset: -1,     // offset verticale QR (schiva il foro)
+  qrSize: 21,     // Dimensione area QR aumentata (da 20 a 21)
+  qrYOffset: -1.5,     // Offset incrementato per schivare meglio il foro
   textW: 24,     // larghezza area testo
   textH: 15,     // altezza area testo
   textYOffset: -2,     // offset verticale testo
@@ -169,7 +169,7 @@ function buildQRFillExport(qrModules) {
       if (Math.sqrt(cx * cx + cy * cy) > TAG.radius - 0.5) continue;
 
       const s = new THREE.Shape();
-      const h = (cellMm - 0.04) / 2;
+      const h = (cellMm + 0.02) / 2;
       s.moveTo(-h, -h); s.lineTo(h, -h); s.lineTo(h, h); s.lineTo(-h, h);
       s.closePath();
 
@@ -217,7 +217,7 @@ function build3MFQRFill(qrModules) {
       if (Math.sqrt(cx * cx + cy * cy) > TAG.radius - 0.5) continue;
 
       const s = new THREE.Shape();
-      const h = (cellMm - 0.04) / 2;
+      const h = (cellMm + 0.02) / 2;
       s.moveTo(-h, -h); s.lineTo(h, -h); s.lineTo(h, h); s.lineTo(-h, h);
       s.closePath();
 
@@ -385,7 +385,7 @@ function buildQRFill(qrModules) {
       if (Math.sqrt(cx * cx + cy * cy) > TAG.radius - 0.5) continue;
 
       const cellShape = new THREE.Shape();
-      const h = (cellMm - 0.08) / 2, v = h;
+      const h = (cellMm + 0.02) / 2, v = h; // Overlap per preview
       cellShape.moveTo(-h, -v); cellShape.lineTo(h, -v);
       cellShape.lineTo(h, v); cellShape.lineTo(-h, v);
       cellShape.closePath();

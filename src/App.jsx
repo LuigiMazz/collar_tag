@@ -160,6 +160,7 @@ function TagEditor() {
       await new Promise(r => setTimeout(r, 50));
 
       const url = buildCardUrl(name, phone, phone2, description);
+      // FASE 4: Level 'L' (7%) for minimum module count
       const qrMatrix = generateQRMatrix(url, 0, 'L');
       const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white');
 
