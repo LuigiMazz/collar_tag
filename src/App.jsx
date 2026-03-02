@@ -269,8 +269,11 @@ function TagEditor() {
             </p>
 
             <div className="tutorial-info-box">
-              <span className="info-icon">💡</span>
-              <p><strong>INFO:</strong> È consigliabile usare un <strong>ugello da 0.2mm</strong> per una massima leggibilità.</p>
+              <div className="info-header">
+                <span className="info-icon">💡</span><p><strong>INFO:</strong></p>
+              </div>
+              <p>È consigliabile usare un <strong>ugello da 0.2mm</strong> per una massima leggibilità.</p>
+              <p>Se si deisdera stampare con <strong>ungello da 0.4mm</strong>, si consiglia di aumentare il diametro della medaglia ad almeno <strong>40mm</strong></p>
             </div>
 
             <div className="tutorial-media-container">

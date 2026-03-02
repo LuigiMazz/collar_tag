@@ -467,12 +467,30 @@ body,
   border-left: 4px solid var(--secondary);
   padding: 16px;
   border-radius: 4px var(--radius-md) var(--radius-md) 4px;
+
+  .info-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .tutorial-media-container {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  background: #000;
+  /* Fondo nero per caricamento */
+}
+
+.tutorial-video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  /* Forza l'aspect ratio se necessario, o lascia che il video decida */
+  object-fit: cover;
+  display: block;
 }
 
 /* ============================================================
@@ -509,4 +527,16 @@ body,
   .export-group {
     flex-direction: column;
   }
+
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  padding: 16px;
+  font-size: 1.1rem;
 }
