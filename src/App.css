@@ -192,41 +192,11 @@ body,
 /* ============================================================
    Color toggle
    ============================================================ */
-.color-toggle {
-  display: flex;
-  gap: 8px;
-}
-
-.color-btn {
-  flex: 1;
-  display: flex;
+.form-check {
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border-radius: var(--radius);
-  border: 1.5px solid var(--border);
-  background: var(--surface-alt);
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.color-btn.active {
-  border-color: var(--gold);
-  color: var(--text);
-}
-
-.color-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--swatch);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
 }
 
 /* ============================================================

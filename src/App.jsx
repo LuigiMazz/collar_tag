@@ -54,10 +54,6 @@ export default function App() {
 }
 
 
-const COLOR_OPTIONS = [
-  { key: 'white', label: 'Bianco', hex: '#FFFFFF', fill: '#1A1A1A' },
-  { key: 'gold', label: 'Oro', hex: '#D4AF37', fill: '#1A1A1A' },
-];
 
 function TagEditor() {
   const [name, setName] = useState('LUNA');
@@ -65,7 +61,6 @@ function TagEditor() {
   const [phone2, setPhone2] = useState('');
   const [description, setDescription] = useState('');
   const [autoRot, setAutoRot] = useState(true);
-  const [colorKey, setColorKey] = useState('white');
   const [mesh, setMesh] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,7 +81,7 @@ function TagEditor() {
 
       const url = buildCardUrl(name, phone, phone2, description);
       const qrMatrix = generateQRMatrix(url, 0, 'L');
-      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, colorKey);
+      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white');
 
       meshRef.current = newMesh;
       setMesh(newMesh);
@@ -97,19 +92,18 @@ function TagEditor() {
     } finally {
       setLoading(false);
     }
-  }, [name, phone, phone2, description, colorKey]);
+  }, [name, phone, phone2, description]);
 
   const handleExportSTL = useCallback(() => {
     if (!meshRef.current) return;
-    exportSTL(meshRef.current, `medaglietta_${name.toLowerCase().replace(/\s+/g, '_')}`);
+    exportSTL(meshRef.current, `pawtag3d_${name.toLowerCase().replace(/\s+/g, '_')}`);
   }, [name]);
 
   const handleExport3MF = useCallback(() => {
     if (!meshRef.current) return;
-    const opt = COLOR_OPTIONS.find(c => c.key === colorKey) ?? COLOR_OPTIONS[0];
-    const fname = `medaglietta_${name.toLowerCase().replace(/\s+/g, '_')}`;
-    export3MF(meshRef.current, opt.hex, opt.fill, fname);
-  }, [name, colorKey]);
+    const fname = `pawtag3d_${name.toLowerCase().replace(/\s+/g, '_')}`;
+    export3MF(meshRef.current, '#FFFFFF', '#1A1A1A', fname);
+  }, [name]);
 
   const handlePreviewCard = useCallback(() => {
     const url = buildCardUrl(name, phone, phone2, description);
@@ -124,7 +118,7 @@ function TagEditor() {
       {/* Sidebar                                                           */}
       {/* ---------------------------------------------------------------- */}
       <aside className="sidebar">
-        <h1 className="app-title">Medaglietta 3D</h1>
+        <h1 className="app-title">PawTag 3D</h1>
         <p className="app-subtitle">
           Il QR aprirà una pagina con nome e numero — nessun sito esterno richiesto.
         </p>
@@ -180,24 +174,6 @@ function TagEditor() {
           </p>
         </div>
 
-        {/* Colore medaglietta */}
-        <div className="form-group">
-          <label>Colore medaglietta</label>
-          <div className="color-toggle">
-            {COLOR_OPTIONS.map(opt => (
-              <button
-                key={opt.key}
-                type="button"
-                className={`color-btn ${colorKey === opt.key ? 'active' : ''}`}
-                onClick={() => setColorKey(opt.key)}
-                style={{ '--swatch': opt.hex }}
-              >
-                <span className="color-swatch" />
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="form-group form-check">
           <input

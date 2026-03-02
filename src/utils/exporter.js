@@ -18,7 +18,7 @@ const stlExporter = new STLExporter();
 // ---------------------------------------------------------------------------
 // exportSTL
 // ---------------------------------------------------------------------------
-export function exportSTL(tagMesh, filename = 'medaglietta') {
+export function exportSTL(tagMesh, filename = 'pawtag3d') {
   // corpo centrale + back cap con fori testo + QR sporgente
   const bodyG = tagMesh._bodyGeoExport;
   if (!bodyG) { console.warn('exportSTL: _bodyGeoExport non trovato'); return; }
@@ -55,7 +55,7 @@ export function export3MF(
   tagMesh,
   tagColor = '#FFFFFF',
   fillColor = '#1A1A1A',
-  filename = 'medaglietta'
+  filename = 'pawtag3d'
 ) {
   // Usa geometrie 3MF (corpo pieno + overlap) se disponibili, altrimenti fallback STL-raised
   const bodyGeo = tagMesh._body3MF ?? tagMesh._bodyGeoExport;
