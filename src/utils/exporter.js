@@ -19,17 +19,17 @@ const stlExporter = new STLExporter();
 // exportSTL
 // ---------------------------------------------------------------------------
 export function exportSTL(tagMesh, filename = 'medaglietta') {
-  // Usa le geometrie in rilievo (clean, non-overlapping) per un STL corretto
+  // corpo centrale + back cap con fori testo + QR sporgente
   const bodyG = tagMesh._bodyGeoExport;
   if (!bodyG) { console.warn('exportSTL: _bodyGeoExport non trovato'); return; }
 
-  const geos = [bodyG, tagMesh._qrFillGeoExport, tagMesh._textFillGeoExport]
+  const geos = [bodyG, tagMesh._backCapExport, tagMesh._qrFillGeoExport]
     .filter(Boolean)
     .map(geoToZ0);
 
   const geo = mergePositions(geos);
   const exportMesh = new THREE.Mesh(geo);
-  const stlData    = stlExporter.parse(exportMesh, { binary: true });
+  const stlData = stlExporter.parse(exportMesh, { binary: true });
   downloadBlob(stlData, `${filename}.stl`, 'application/octet-stream');
 }
 
@@ -42,7 +42,7 @@ function mergePositions(geos) {
   for (const g of geos) {
     const pos = g.attributes.position;
     for (let i = 0; i < pos.count; i++) {
-      positions[(off + i) * 3]     = pos.getX(i);
+      positions[(off + i) * 3] = pos.getX(i);
       positions[(off + i) * 3 + 1] = pos.getY(i);
       positions[(off + i) * 3 + 2] = pos.getZ(i);
     }
@@ -71,13 +71,13 @@ function mergePositions(geos) {
  */
 export function export3MF(
   tagMesh,
-  tagColor  = '#FFFFFF',
+  tagColor = '#FFFFFF',
   fillColor = '#1A1A1A',
-  filename  = 'medaglietta'
+  filename = 'medaglietta'
 ) {
   // Usa geometrie 3MF (corpo pieno + overlap) se disponibili, altrimenti fallback STL-raised
-  const bodyGeo = tagMesh._body3MF     ?? tagMesh._bodyGeoExport;
-  const qrGeo   = tagMesh._qrFill3MF   ?? tagMesh._qrFillGeoExport;
+  const bodyGeo = tagMesh._body3MF ?? tagMesh._bodyGeoExport;
+  const qrGeo = tagMesh._qrFill3MF ?? tagMesh._qrFillGeoExport;
   const textGeo = tagMesh._textFill3MF ?? tagMesh._textFillGeoExport;
 
   if (!bodyGeo) {
@@ -87,18 +87,18 @@ export function export3MF(
   }
 
   const bodyExport = geoToZ0(bodyGeo);
-  const qrExport   = qrGeo   ? geoToZ0(qrGeo)   : null;
-  const textExport = textGeo ? geoToZ0(textGeo)  : null;
+  const qrExport = qrGeo ? geoToZ0(qrGeo) : null;
+  const textExport = textGeo ? geoToZ0(textGeo) : null;
 
-  const modelXml         = build3DModel(bodyExport, qrExport, textExport);
+  const modelXml = build3DModel(bodyExport, qrExport, textExport);
   const modelSettingsXml = buildModelSettingsXml(!!qrExport, !!textExport);
 
   const enc = new TextEncoder();
   const zipData = createZip([
-    { name: '[Content_Types].xml',            data: enc.encode(CONTENT_TYPES_XML) },
-    { name: '_rels/.rels',                    data: enc.encode(RELS_XML) },
-    { name: '3D/3dmodel.model',               data: enc.encode(modelXml) },
-    { name: '3D/_rels/3dmodel.model.rels',    data: enc.encode(RELS_3D_XML) },
+    { name: '[Content_Types].xml', data: enc.encode(CONTENT_TYPES_XML) },
+    { name: '_rels/.rels', data: enc.encode(RELS_XML) },
+    { name: '3D/3dmodel.model', data: enc.encode(modelXml) },
+    { name: '3D/_rels/3dmodel.model.rels', data: enc.encode(RELS_3D_XML) },
     { name: 'Metadata/model_settings.config', data: enc.encode(modelSettingsXml) },
   ]);
 
@@ -140,7 +140,7 @@ const RELS_3D_XML = `<?xml version="1.0" encoding="UTF-8"?>
 // Assegnazione estrusori per oggetto (Bambu Studio legge questo file)
 function buildModelSettingsXml(hasQR, hasText) {
   let objs = `  <object id="2">\n    <metadata key="extruder" value="1"/>\n  </object>`;
-  if (hasQR)   objs += `\n  <object id="3">\n    <metadata key="extruder" value="2"/>\n  </object>`;
+  if (hasQR) objs += `\n  <object id="3">\n    <metadata key="extruder" value="2"/>\n  </object>`;
   if (hasText) objs += `\n  <object id="4">\n    <metadata key="extruder" value="2"/>\n  </object>`;
   return `<?xml version="1.0" encoding="utf-8"?>\n<config>\n${objs}\n</config>`;
 }
@@ -156,7 +156,7 @@ function geoToXmlParts(geo) {
     );
   }
   for (let i = 0; i < pos.count; i += 3) {
-    tLines.push(`<triangle v1="${i}" v2="${i+1}" v3="${i+2}"/>`);
+    tLines.push(`<triangle v1="${i}" v2="${i + 1}" v3="${i + 2}"/>`);
   }
   return { vLines, tLines };
 }
@@ -176,10 +176,10 @@ function geoToObject(geo, objectId) {
 }
 
 function build3DModel(bodyGeo, qrGeo, textGeo) {
-  const bodyObj   = geoToObject(bodyGeo, 2);
-  const qrObj     = qrGeo   ? geoToObject(qrGeo,   3) : '';
-  const textObj   = textGeo ? geoToObject(textGeo,  4) : '';
-  const buildQr   = qrGeo   ? '\n    <item objectid="3"/>' : '';
+  const bodyObj = geoToObject(bodyGeo, 2);
+  const qrObj = qrGeo ? geoToObject(qrGeo, 3) : '';
+  const textObj = textGeo ? geoToObject(textGeo, 4) : '';
+  const buildQr = qrGeo ? '\n    <item objectid="3"/>' : '';
   const buildText = textGeo ? '\n    <item objectid="4"/>' : '';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -217,16 +217,16 @@ function crc32(data) {
 
 function createZip(files) {
   const localParts = [], centralParts = [];
-  let localOffset  = 0;
+  let localOffset = 0;
 
   for (const { name, data } of files) {
     const nameBytes = new TextEncoder().encode(name);
     const crc = crc32(data), size = data.length;
 
     const local = new Uint8Array(30 + nameBytes.length + size);
-    const lv    = new DataView(local.buffer);
+    const lv = new DataView(local.buffer);
     lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true);
-    lv.setUint16(6, 0, true);  lv.setUint16(8, 0, true);
+    lv.setUint16(6, 0, true); lv.setUint16(8, 0, true);
     lv.setUint16(10, 0, true); lv.setUint16(12, 0, true);
     lv.setUint32(14, crc, true); lv.setUint32(18, size, true); lv.setUint32(22, size, true);
     lv.setUint16(26, nameBytes.length, true); lv.setUint16(28, 0, true);
@@ -234,7 +234,7 @@ function createZip(files) {
     localParts.push(local);
 
     const central = new Uint8Array(46 + nameBytes.length);
-    const cv      = new DataView(central.buffer);
+    const cv = new DataView(central.buffer);
     cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
     cv.setUint16(8, 0, true); cv.setUint16(10, 0, true); cv.setUint16(12, 0, true); cv.setUint16(14, 0, true);
     cv.setUint32(16, crc, true); cv.setUint32(20, size, true); cv.setUint32(24, size, true);
@@ -249,15 +249,15 @@ function createZip(files) {
 
   const centralSize = centralParts.reduce((s, c) => s + c.length, 0);
   const eocd = new Uint8Array(22);
-  const ev   = new DataView(eocd.buffer);
+  const ev = new DataView(eocd.buffer);
   ev.setUint32(0, 0x06054b50, true); ev.setUint16(4, 0, true); ev.setUint16(6, 0, true);
   ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
   ev.setUint32(12, centralSize, true); ev.setUint32(16, localOffset, true); ev.setUint16(20, 0, true);
 
-  const all   = [...localParts, ...centralParts, eocd];
+  const all = [...localParts, ...centralParts, eocd];
   const total = all.reduce((s, a) => s + a.length, 0);
-  const out   = new Uint8Array(total);
-  let   pos   = 0;
+  const out = new Uint8Array(total);
+  let pos = 0;
   for (const p of all) { out.set(p, pos); pos += p.length; }
   return out;
 }
@@ -267,7 +267,7 @@ function createZip(files) {
 // ---------------------------------------------------------------------------
 function downloadBlob(data, filename, mimeType) {
   const blob = new Blob([data], { type: mimeType });
-  const url  = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url; link.download = filename; link.click();
   URL.revokeObjectURL(url);

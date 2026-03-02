@@ -1,8 +1,8 @@
 
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import TagScene   from './components/TagScene';
-import PetCard    from './components/PetCard';
+import TagScene from './components/TagScene';
+import PetCard from './components/PetCard';
 import { buildTagMesh } from './utils/geometry';
 import { generateQRMatrix } from './utils/qr';
 import { exportSTL, export3MF } from './utils/exporter';
@@ -17,7 +17,7 @@ function readCardHash() {
 }
 
 function buildCardUrl(name, phone) {
-  const base   = window.location.origin + window.location.pathname;
+  const base = window.location.origin + window.location.pathname;
   const params = new URLSearchParams({ n: name.trim(), p: phone.trim() });
   return `${base}#card?${params}`;
 }
@@ -38,25 +38,25 @@ export default function App() {
 
 
 const COLOR_OPTIONS = [
-  { key: 'white', label: 'Bianco',  hex: '#FFFFFF', fill: '#1A1A1A' },
-  { key: 'gold',  label: 'Oro',     hex: '#D4AF37', fill: '#1A1A1A' },
+  { key: 'white', label: 'Bianco', hex: '#FFFFFF', fill: '#1A1A1A' },
+  { key: 'gold', label: 'Oro', hex: '#D4AF37', fill: '#1A1A1A' },
 ];
 
 function TagEditor() {
-  const [name,     setName]     = useState('LUNA');
-  const [phone,    setPhone]    = useState('+39 333 1234567');
-  const [autoRot,  setAutoRot]  = useState(true);
+  const [name, setName] = useState('LUNA');
+  const [phone, setPhone] = useState('+39 333 1234567');
+  const [autoRot, setAutoRot] = useState(true);
   const [colorKey, setColorKey] = useState('white');
-  const [mesh,     setMesh]     = useState(null);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState(null);
-  const [cardUrl,  setCardUrl]  = useState('');
+  const [mesh, setMesh] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [cardUrl, setCardUrl] = useState('');
 
   const meshRef = useRef(null);
 
   // Genera la mesh CSG
   const handleGenerate = useCallback(async () => {
-    if (!name.trim())  { setError('Inserisci il nome dell\'animale.'); return; }
+    if (!name.trim()) { setError('Inserisci il nome dell\'animale.'); return; }
     if (!phone.trim()) { setError('Inserisci il numero di telefono.'); return; }
 
     setLoading(true);
@@ -65,9 +65,9 @@ function TagEditor() {
     try {
       await new Promise(r => setTimeout(r, 50));
 
-      const url      = buildCardUrl(name, phone);
+      const url = buildCardUrl(name, phone);
       const qrMatrix = generateQRMatrix(url, 0, 'L');
-      const newMesh  = buildTagMesh(qrMatrix, name, phone, colorKey);
+      const newMesh = buildTagMesh(qrMatrix, name, phone, colorKey);
 
       meshRef.current = newMesh;
       setMesh(newMesh);
@@ -87,8 +87,8 @@ function TagEditor() {
 
   const handleExport3MF = useCallback(() => {
     if (!meshRef.current) return;
-    const opt    = COLOR_OPTIONS.find(c => c.key === colorKey) ?? COLOR_OPTIONS[0];
-    const fname  = `medaglietta_${name.toLowerCase().replace(/\s+/g, '_')}`;
+    const opt = COLOR_OPTIONS.find(c => c.key === colorKey) ?? COLOR_OPTIONS[0];
+    const fname = `medaglietta_${name.toLowerCase().replace(/\s+/g, '_')}`;
     export3MF(meshRef.current, opt.hex, opt.fill, fname);
   }, [name, colorKey]);
 
@@ -166,9 +166,9 @@ function TagEditor() {
           <h3>Specifiche</h3>
           <ul>
             <li>Diametro: <strong>30 mm</strong></li>
-            <li>Spessore: <strong>2.2 mm</strong></li>
+            <li>Spessore: <strong>3.6 mm</strong></li>
             <li>Foro: <strong>Ø 4 mm</strong></li>
-            <li>Incisione: <strong>0.8 mm</strong></li>
+            <li>Incisione: <strong>1.0 mm</strong></li>
           </ul>
         </div>
 
