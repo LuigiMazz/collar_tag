@@ -499,19 +499,23 @@ body,
 @media (max-width: 900px) {
   .app-container {
     flex-direction: column;
-    height: auto;
-    overflow: auto;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: none;
+    overflow: visible;
   }
 
   .canvas-wrapper {
-    height: 70vh;
-    order: -1;
+    height: 45vh;
+    min-height: 350px;
+    flex: none;
   }
 }
 
