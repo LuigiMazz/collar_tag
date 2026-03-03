@@ -74,7 +74,10 @@ function readCardHash() {
 }
 
 function buildCardUrl(name, phone, phone2, description) {
-  const base = window.location.origin + window.location.pathname;
+  // VITE_QR_BASE_URL permette di usare un dominio breve in produzione
+  // (es. https://ptg.it/) per ridurre la versione QR e avere celle fisicamente
+  // più grandi → stampa 3D più precisa e QR più leggibile.
+  const base = (import.meta.env.VITE_QR_BASE_URL ?? (window.location.origin + window.location.pathname)).replace(/\/$/, '') + '/';
 
   const rawData = [
     (name || '').trim(),
@@ -145,6 +148,7 @@ function TagEditor() {
   const [error, setError] = useState(null);
   const [cardUrl, setCardUrl] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
+  const [qrModuleCount, setQrModuleCount] = useState(null);
 
   const meshRef = useRef(null);
 
@@ -167,6 +171,7 @@ function TagEditor() {
       meshRef.current = newMesh;
       setMesh(newMesh);
       setCardUrl(url);
+      setQrModuleCount(qrMatrix.length);
     } catch (err) {
       console.error(err);
       setError('Errore nella generazione. Riprova.');
@@ -282,6 +287,13 @@ function TagEditor() {
               <li>Spessore: <strong>3.6 mm</strong></li>
               <li>Foro: <strong>Ø 4 mm</strong></li>
               <li>Incisione: <strong>1.0 mm</strong></li>
+              {qrModuleCount && (() => {
+                const version = (qrModuleCount - 17) / 4;
+                const cellMm = (21 / qrModuleCount).toFixed(2);
+                return (
+                  <li>QR: <strong>v{version} ({qrModuleCount}×{qrModuleCount}, cella {cellMm} mm)</strong></li>
+                );
+              })()}
             </ul>
           </div>
 
