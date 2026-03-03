@@ -11,7 +11,7 @@
 
 import { STLExporter } from 'three-stdlib';
 import * as THREE from 'three';
-import { TAG, mergeGeos } from './geometry.js';
+import { getTagConfig, mergeGeos } from './geometry.js';
 
 // ---------------------------------------------------------------------------
 // exportSTL
@@ -99,7 +99,7 @@ function geoToZ0(geo) {
     g.setAttribute('position', g.attributes.position.clone());
   }
 
-  g.translate(0, 0, TAG.thickness / 2);
+  g.translate(0, 0, getTagConfig().thickness / 2);
   g.computeVertexNormals();
   return g;
 }

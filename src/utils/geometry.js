@@ -25,21 +25,26 @@
 import * as THREE from 'three';
 
 // ---------------------------------------------------------------------------
-// Costanti (mm)
+// Costanti e Configurazione (mm)
 // ---------------------------------------------------------------------------
-export const TAG = {
-  radius: 15,     // raggio disco (Ø30mm)
-  thickness: 3.6,    // spessore totale
-  holeRadius: 2,      // raggio foro (Ø4mm)
-  holeY: 12,     // posizione Y del foro (vicino al bordo superiore)
-  engraveDepth: 1.0,    // profondità incisione
-  segments: 64,     // segmenti per archi circolari
-  qrSize: 21,     // Dimensione area QR aumentata (da 20 a 21)
-  qrYOffset: -1.5,     // Offset incrementato per schivare meglio il foro
-  textW: 24,     // larghezza area testo
-  textH: 15,     // altezza area testo
-  textYOffset: -2,     // offset verticale testo
-};
+export function getTagConfig(diameter = 30) {
+  const radius = diameter / 2;
+  const scale = diameter / 30;
+
+  return {
+    radius: radius,
+    thickness: 3.6,
+    holeRadius: 2,
+    holeY: radius - 3, // Posiziona il foro a 3mm dal bordo superiore
+    engraveDepth: 1.0,
+    segments: 64,
+    qrSize: 21 * scale + (scale > 1 ? (scale - 1) * 2 : 0), // Espande l'area QR più che proporzionalmente
+    qrYOffset: -1.5 * scale,
+    textW: 24 * scale,
+    textH: 15 * scale,
+    textYOffset: -2 * scale,
+  };
+}
 
 export const MATERIALS = {
   white: { color: 0xffffff, metalness: 0.05, roughness: 0.65 },
@@ -49,7 +54,7 @@ export const MATERIALS = {
 // ---------------------------------------------------------------------------
 // Shape base del disco (cerchio con foro per l'anello)
 // ---------------------------------------------------------------------------
-function makeDiscShape() {
+function makeDiscShape(TAG) {
   const shape = new THREE.Shape();
   shape.absarc(0, 0, TAG.radius, 0, Math.PI * 2, false);
   const holePath = new THREE.Path();
@@ -58,14 +63,14 @@ function makeDiscShape() {
   return shape;
 }
 
-const EXTRUDE = { bevelEnabled: false, curveSegments: TAG.segments };
+const getExtrudeSettings = (TAG) => ({ bevelEnabled: false, curveSegments: TAG.segments });
 
 // ---------------------------------------------------------------------------
 // Strato base (pieno, senza incisioni)
 // ---------------------------------------------------------------------------
-function buildBase(discShape) {
+function buildBase(discShape, TAG) {
   const h = TAG.thickness - TAG.engraveDepth * 2;
-  const geo = new THREE.ExtrudeGeometry(discShape, { ...EXTRUDE, depth: h });
+  const geo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: h });
   // Centra su Z: da z=-(thickness/2)+engraveDepth a z=+(thickness/2)-engraveDepth
   geo.translate(0, 0, -(TAG.thickness / 2) + TAG.engraveDepth);
   return geo;
@@ -82,12 +87,11 @@ function buildBase(discShape) {
 // Dopo geoToZ0 (+1.75): z=0→0.4 testo | z=0.4→3.1 corpo | z=3.1→3.5 QR
 // ===========================================================================
 
-const RAISE = TAG.engraveDepth;  // 1.0mm altezza rilievo (inciso profondamente nel bicolore)
 
 // Corpo export: spessore centrale senza i due strati di incisione
-function buildBodyExport(discShape) {
-  const depth = TAG.thickness - RAISE * 2;
-  const geo = new THREE.ExtrudeGeometry(discShape, { ...EXTRUDE, depth });
+function buildBodyExport(discShape, TAG, raise) {
+  const depth = TAG.thickness - raise * 2;
+  const geo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth });
   geo.translate(0, 0, -depth / 2);
   geo.computeVertexNormals();
   return geo;
@@ -97,8 +101,8 @@ function buildBodyExport(discShape) {
 // Stessa logica di buildFrontBorder per le celle QR, ma sul retro con pixel testo.
 // Il corpo export (buildBodyExport) copre lo spessore centrale;
 // questo strato copre il retro tranne dove c'è il testo → testo negativo.
-function buildBackCapExport(name, phone, phone2) {
-  const shape = cloneShapeWithHole(makeDiscShape());
+function buildBackCapExport(name, phone, phone2, TAG, raise) {
+  const shape = cloneShapeWithHole(makeDiscShape(TAG), TAG);
 
   const lines = [
     name.toUpperCase().slice(0, 16),
@@ -117,7 +121,7 @@ function buildBackCapExport(name, phone, phone2) {
     yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
   }
 
-  const half = cellMm * 0.45;
+  const half = cellMm * 0.6;
 
   for (let li = 0; li < lines.length; li++) {
     const text = lines[li];
@@ -149,16 +153,16 @@ function buildBackCapExport(name, phone, phone2) {
   }
 
   // Strato sottile: profondità = RAISE, posizionato alla faccia posteriore
-  const geo = new THREE.ExtrudeGeometry(shape, { ...EXTRUDE, depth: RAISE });
+  const geo = new THREE.ExtrudeGeometry(shape, { ...getExtrudeSettings(TAG), depth: raise });
   geo.translate(0, 0, -(TAG.thickness / 2));
   return geo;
 }
 
 // QR in rilievo: celle che sporgono dalla faccia frontale (z=+(h/2) → z=+(thickness/2))
-function buildQRFillExport(qrModules) {
+function buildQRFillExport(qrModules, TAG, raise) {
   const size = qrModules.length;
   const cellMm = TAG.qrSize / size;
-  const startZ = (TAG.thickness - RAISE * 2) / 2;
+  const startZ = (TAG.thickness - raise * 2) / 2;
   const geos = [];
 
   for (let row = 0; row < size; row++) {
@@ -173,7 +177,7 @@ function buildQRFillExport(qrModules) {
       s.moveTo(-h, -h); s.lineTo(h, -h); s.lineTo(h, h); s.lineTo(-h, h);
       s.closePath();
 
-      const geo = new THREE.ExtrudeGeometry(s, { bevelEnabled: false, depth: RAISE });
+      const geo = new THREE.ExtrudeGeometry(s, { bevelEnabled: false, depth: raise });
       geo.translate(cx, cy, startZ);
       geos.push(geo);
     }
@@ -195,17 +199,17 @@ function buildQRFillExport(qrModules) {
 //   → Testo visibile sul retro come colore diverso (rilievo 0.4mm)
 // ===========================================================================
 
-function build3MFBody() {
+function build3MFBody(TAG) {
   const h = TAG.thickness;                                            // 3.5mm
-  const geo = new THREE.ExtrudeGeometry(makeDiscShape(), { ...EXTRUDE, depth: h });
+  const geo = new THREE.ExtrudeGeometry(makeDiscShape(TAG), { ...getExtrudeSettings(TAG), depth: h });
   geo.translate(0, 0, -(h / 2));                                      // z = -1.75 → +1.75
   return geo;
 }
 
-function build3MFQRFill(qrModules) {
+function build3MFQRFill(qrModules, TAG, raise) {
   const size = qrModules.length;
   const cellMm = TAG.qrSize / size;
-  const depth = TAG.thickness + RAISE;                               // 3.9mm (corpo + rilievo)
+  const depth = TAG.thickness + raise;                               // 3.9mm (corpo + rilievo)
   const startZ = -(TAG.thickness / 2);                                // -1.75 (dal fondo corpo)
   const geos = [];
 
@@ -275,9 +279,9 @@ const BITMAP_FONT = {
 // Ogni lettera è un grid di cubetti, come le celle QR.
 // X-mirroring incorporato nella posizione dei pixel (no post-process di winding).
 // ---------------------------------------------------------------------------
-function buildTextPixels(name, phone, phone2) {
+function buildTextPixels(name, phone, phone2, TAG) {
   const z0 = -(TAG.thickness / 2);  // -1.75: faccia retro del disco
-  const depth = RAISE;                  // 0.4mm
+  const depth = TAG.engraveDepth;       // 0.4mm (o 1.0mm in base alla config)
 
   const lines = [
     name.toUpperCase().slice(0, 16),
@@ -298,7 +302,7 @@ function buildTextPixels(name, phone, phone2) {
     yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
   }
 
-  const half = cellMm * 0.45;  // mezzo lato pixel (5% di gap per chiarezza)
+  const half = cellMm * 0.6;  // mezzo lato pixel (5% di gap per chiarezza)
   const geos = [];
 
   for (let li = 0; li < lines.length; li++) {
@@ -348,8 +352,8 @@ function buildTextPixels(name, phone, phone2) {
 // ---------------------------------------------------------------------------
 // Border layer fronte: disco − celle QR  (Colore 1, parte del body)
 // ---------------------------------------------------------------------------
-function buildFrontBorder(discShape, qrModules) {
-  const shape = cloneShapeWithHole(discShape);
+function buildFrontBorder(discShape, qrModules, TAG) {
+  const shape = cloneShapeWithHole(discShape, TAG);
   const size = qrModules.length;
   const cellMm = TAG.qrSize / size;
 
@@ -364,7 +368,7 @@ function buildFrontBorder(discShape, qrModules) {
     }
   }
 
-  const geo = new THREE.ExtrudeGeometry(shape, { ...EXTRUDE, depth: TAG.engraveDepth });
+  const geo = new THREE.ExtrudeGeometry(shape, { ...getExtrudeSettings(TAG), depth: TAG.engraveDepth });
   geo.translate(0, 0, TAG.thickness / 2 - TAG.engraveDepth);
   return geo;
 }
@@ -372,7 +376,7 @@ function buildFrontBorder(discShape, qrModules) {
 // ---------------------------------------------------------------------------
 // QR fill: sole celle QR (Colore 2)
 // ---------------------------------------------------------------------------
-function buildQRFill(qrModules) {
+function buildQRFill(qrModules, TAG) {
   const size = qrModules.length;
   const cellMm = TAG.qrSize / size;
   const geos = [];
@@ -406,8 +410,8 @@ function buildQRFill(qrModules) {
 // Border layer retro: disco pieno (Colore 1) — senza fori testo
 // Il testo (Colore 2) viene renderizzato sopra con renderOrder=1
 // ---------------------------------------------------------------------------
-function buildBackBorder(discShape) {
-  const geo = new THREE.ExtrudeGeometry(discShape, { ...EXTRUDE, depth: TAG.engraveDepth });
+function buildBackBorder(discShape, TAG) {
+  const geo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: TAG.engraveDepth });
   geo.translate(0, 0, -TAG.thickness / 2);
   return geo;
 }
@@ -424,7 +428,7 @@ function buildTextFill(name, phone) {
 // ---------------------------------------------------------------------------
 
 /** Clona una Shape con le sue holes (Deep clone) */
-function cloneShapeWithHole(src) {
+function cloneShapeWithHole(src, TAG) {
   const copy = new THREE.Shape(src.getPoints(TAG.segments));
   copy.holes = src.holes.map(h => new THREE.Path(h.getPoints(32)));
   return copy;
@@ -498,20 +502,23 @@ export function mergeGeos(geos) {
  * @param {string}     phone2
  * @param {'white'|'gold'} [colorKey='white']
  */
-export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white') {
+export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white', diameter = 30) {
+  const TAG = getTagConfig(diameter);
+  const RAISE = TAG.engraveDepth; // Altezza rilievo per export STL, usiamo engraveDepth per coerenza
+
   const matOpts = MATERIALS[colorKey] ?? MATERIALS.white;
   const material = new THREE.MeshStandardMaterial(matOpts);
 
-  const discShape = makeDiscShape();
+  const discShape = makeDiscShape(TAG);
 
   // --- Geometrie del corpo (Colore 1) ---
-  const baseGeo = buildBase(discShape);
-  const frontBorderGeo = buildFrontBorder(discShape, qrModules);
-  const backBorderGeo = buildBackBorder(discShape);
+  const baseGeo = buildBase(discShape, TAG);
+  const frontBorderGeo = buildFrontBorder(discShape, qrModules, TAG);
+  const backBorderGeo = buildBackBorder(discShape, TAG);
 
   // --- Geometrie del riempimento (Colore 2) ---
-  const qrFillGeo = buildQRFill(qrModules);
-  const textFillGeo = buildTextPixels(name, phone, phone2);
+  const qrFillGeo = buildQRFill(qrModules, TAG);
+  const textFillGeo = buildTextPixels(name, phone, phone2, TAG);
 
   const allBodyGeos = [baseGeo, frontBorderGeo, backBorderGeo].map(g => {
     const ni = g.index ? g.toNonIndexed() : g.clone();
@@ -556,18 +563,18 @@ export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white')
   }
 
   // Geometrie per STL: corpo centrale + back cap con fori testo + QR sporgente
-  const exportBody = buildBodyExport(discShape);
-  const exportBackCap = buildBackCapExport(name, phone, phone2);
-  const exportQR = buildQRFillExport(qrModules);
+  const exportBody = buildBodyExport(discShape, TAG, RAISE);
+  const exportBackCap = buildBackCapExport(name, phone, phone2, TAG, RAISE);
+  const exportQR = buildQRFillExport(qrModules, TAG, RAISE);
 
   group._bodyGeoExport = exportBody;
   group._backCapExport = exportBackCap;
   group._qrFillGeoExport = exportQR.attributes.position?.count > 0 ? exportQR : null;
 
   // Geometrie per 3MF: corpo pieno 3.5mm + QR pilastro + testo in rilievo (overlap → bicolore)
-  const body3mf = build3MFBody();
-  const qr3mf = build3MFQRFill(qrModules);
-  const text3mf = buildTextPixels(name, phone, phone2);
+  const body3mf = build3MFBody(TAG);
+  const qr3mf = build3MFQRFill(qrModules, TAG, RAISE);
+  const text3mf = buildTextPixels(name, phone, phone2, TAG);
 
   group._body3MF = body3mf;
   group._qrFill3MF = qr3mf.attributes.position?.count > 0 ? qr3mf : null;

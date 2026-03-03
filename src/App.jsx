@@ -73,14 +73,14 @@ function readCardHash() {
   return null;
 }
 
-function buildCardUrl(name, phone, phone2, description) {
+function buildCardUrl(name, phone, phone2, description, minimal = false) {
   const base = window.location.origin + window.location.pathname;
 
   const rawData = [
     (name || '').trim(),
     (phone || '').trim(),
-    (phone2 || '').trim(),
-    (description || '').trim()
+    minimal ? '' : (phone2 || '').trim(),
+    minimal ? '' : (description || '').trim()
   ];
 
   // 1. Extreme Optimized (Dictionary + AlphaNum)
@@ -91,11 +91,15 @@ function buildCardUrl(name, phone, phone2, description) {
     rawData[2].replace(/\D/g, ''),
     dictDesc
   ].join(':');
-  const extremeUrl = `${base}#e:${extremeData}`;
+
+  // FORZA CASE INSENSITIVE / ALPHANUMERIC
+  // Il prefisso della URL viene forzato in MAIUSCOLO per restare in Alphanumeric mode nel QR
+  const baseUpper = base.toUpperCase();
+  const extremeUrl = `${baseUpper}#e:${extremeData}`;
 
   // 2. Universal Optimized (No Dictionary, Pure AlphaNum)
   const universalData = rawData.map(v => v.toUpperCase()).join(':');
-  const universalUrl = `${base}#*${universalData}`;
+  const universalUrl = `${baseUpper}#*${universalData}`;
 
   // 3. Simple Positional
   const pipeJoined = rawData.map(v => encodeURIComponent(v)).join('|');
@@ -139,11 +143,14 @@ function TagEditor() {
   const [phone, setPhone] = useState('3331234567');
   const [phone2, setPhone2] = useState('');
   const [description, setDescription] = useState('');
+  const [diameter, setDiameter] = useState(30);
+  const [minimalQR, setMinimalQR] = useState(false);
   const [autoRot, setAutoRot] = useState(true);
   const [mesh, setMesh] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [cardUrl, setCardUrl] = useState('');
+  const [qrInfo, setQrInfo] = useState({ version: 0, moduleSize: 0 });
   const [showTutorial, setShowTutorial] = useState(false);
 
   const meshRef = useRef(null);
@@ -159,10 +166,21 @@ function TagEditor() {
     try {
       await new Promise(r => setTimeout(r, 50));
 
-      const url = buildCardUrl(name, phone, phone2, description);
-      // FASE 4: Level 'L' (7%) for minimum module count
+      const url = buildCardUrl(name, phone, phone2, description, minimalQR);
+
+      // Generazione effettiva (sia per la mesh che per le statistiche del semaforo)
       const qrMatrix = generateQRMatrix(url, 0, 'L');
-      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white');
+      const count = qrMatrix.length;
+      const version = (count - 17) / 4;
+
+      // Dimensione reale modulo
+      const scale = diameter / 30;
+      const physicalQrSize = 21 * scale + (scale > 1 ? (scale - 1) * 2 : 0);
+      const mSize = physicalQrSize / count;
+
+      setQrInfo({ version, moduleCount: count, moduleSize: mSize });
+
+      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white', diameter);
 
       meshRef.current = newMesh;
       setMesh(newMesh);
@@ -173,7 +191,7 @@ function TagEditor() {
     } finally {
       setLoading(false);
     }
-  }, [name, phone, phone2, description]);
+  }, [name, phone, phone2, description, minimalQR, diameter]);
 
   const handleExportSTL = useCallback(() => {
     if (!meshRef.current) return;
@@ -265,20 +283,53 @@ function TagEditor() {
           </div>
 
 
-          <div className="form-group form-check">
+          <div className="form-group">
+            <label htmlFor="diameter">📏 Diametro Medaglia: <strong>{diameter}mm</strong></label>
             <input
-              id="auto-rotate"
-              type="checkbox"
-              checked={autoRot}
-              onChange={e => setAutoRot(e.target.checked)}
+              id="diameter"
+              type="range"
+              min="30"
+              max="45"
+              step="1"
+              value={diameter}
+              onChange={e => setDiameter(parseInt(e.target.value))}
             />
-            <label htmlFor="auto-rotate">Rotazione automatica</label>
+          </div>
+
+          <div className="form-group form-check form-row" title="Rendi il QR più semplice escludendo note e secondo telefono">
+            <input
+              id="minimal-qr"
+              type="checkbox"
+              checked={minimalQR}
+              onChange={e => setMinimalQR(e.target.checked)}
+            />
+            <label htmlFor="minimal-qr">✨ QR Semplificato (Consigliato)</label>
+          </div>
+
+          <div className={`printability-box ${qrInfo.moduleSize > 0.8 ? 'good' : qrInfo.moduleSize > 0.6 ? 'medium' : 'hard'}`}>
+            <div className="print-header">
+              <span className="print-icon">
+                {qrInfo.moduleSize > 0.8 ? '✅' : qrInfo.moduleSize > 0.6 ? '⚠️' : '❌'}
+              </span>
+              <strong>Qualità Stampa</strong>
+            </div>
+            <div className="print-details">
+              <span>QR Versione: {qrInfo.version || '-'}</span>
+              <span>Lato Modulo: {qrInfo.moduleSize ? qrInfo.moduleSize.toFixed(2) + 'mm' : '-'}</span>
+            </div>
+            <p className="print-hint">
+              {qrInfo.moduleSize > 0.8
+                ? 'Ottimo! Stampabile anche con ugello da 0.4mm.'
+                : qrInfo.moduleSize > 0.5
+                  ? 'Accettabile. Consigliato ugello 0.2mm o diametro > 35mm.'
+                  : 'Troppo dettagliato. Aumenta il diametro o usa QR Semplice.'}
+            </p>
           </div>
 
           <div className="spec-box">
             <h3>Specifiche</h3>
             <ul>
-              <li>Diametro: <strong>30 mm</strong></li>
+              <li>Diametro: <strong>{diameter} mm</strong></li>
               <li>Spessore: <strong>3.6 mm</strong></li>
               <li>Foro: <strong>Ø 4 mm</strong></li>
               <li>Incisione: <strong>1.0 mm</strong></li>
