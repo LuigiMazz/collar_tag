@@ -13,8 +13,6 @@ import { STLExporter } from 'three-stdlib';
 import * as THREE from 'three';
 import { TAG, mergeGeos } from './geometry.js';
 
-const stlExporter = new STLExporter();
-
 // ---------------------------------------------------------------------------
 // exportSTL
 // ---------------------------------------------------------------------------
@@ -31,6 +29,7 @@ export function exportSTL(tagMesh, filename = 'pawtag3d') {
 
   const geo = mergeGeos(geos);
   const exportMesh = new THREE.Mesh(geo);
+  const stlExporter = new STLExporter();
   const stlData = stlExporter.parse(exportMesh, { binary: true });
   downloadBlob(stlData, `${filename}.stl`, 'application/octet-stream');
 }
@@ -93,6 +92,13 @@ export function export3MF(
 
 function geoToZ0(geo) {
   const g = geo.index ? geo.toNonIndexed() : geo.clone();
+
+  // THREE.BufferGeometry.clone() shares attributes. 
+  // We must clone the position attribute so translation doesn't mutate the original mesh.
+  if (!geo.index && g.attributes.position) {
+    g.setAttribute('position', g.attributes.position.clone());
+  }
+
   g.translate(0, 0, TAG.thickness / 2);
   g.computeVertexNormals();
   return g;
