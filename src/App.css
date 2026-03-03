@@ -438,6 +438,7 @@ body,
   justify-content: center;
   padding: 24px;
   z-index: 1000;
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -450,6 +451,8 @@ body,
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .tutorial-text {
@@ -486,11 +489,10 @@ body,
 
 .tutorial-video {
   width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  /* Forza l'aspect ratio se necessario, o lascia che il video decida */
-  object-fit: cover;
+  max-height: 250px;
+  object-fit: contain;
   display: block;
+  background-color: black;
 }
 
 /* ============================================================
