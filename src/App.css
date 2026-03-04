@@ -47,6 +47,14 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
+/* PetCard page: unlock scroll for small screens */
+html:has(.petcard-overlay),
+body:has(.petcard-overlay),
+#root:has(.petcard-overlay) {
+  overflow: auto;
+  height: auto;
+}
+
 /* ============================================================
    Layout
    ============================================================ */
@@ -204,6 +212,7 @@ body,
 /* Range Input Styling */
 input[type="range"] {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 6px;
   background: var(--surface-alt);
@@ -463,6 +472,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   right: 0;
   bottom: 0;
   background: rgba(45, 52, 54, 0.8);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;

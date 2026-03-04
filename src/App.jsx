@@ -2,9 +2,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import TagScene from './components/TagScene';
 import PetCard from './components/PetCard';
-import { buildTagMesh } from './utils/geometry';
+import { buildTagMesh, getTagConfig } from './utils/geometry';
 import { generateQRMatrix } from './utils/qr';
-import { exportSTL, export3MF } from './utils/exporter';
+import { exportSTL } from './utils/exporter';
 import LZString from 'lz-string';
 import { compressWithDict, decompressWithDict } from './utils/dictionary';
 import './App.css';
@@ -144,12 +144,12 @@ function TagEditor() {
   const [phone2, setPhone2] = useState('');
   const [description, setDescription] = useState('');
   const [diameter, setDiameter] = useState(30);
-  const [minimalQR, setMinimalQR] = useState(false);
-  const [autoRot, setAutoRot] = useState(true);
+  const [minimalQR, setMinimalQR] = useState(true);
+  const [autoRot] = useState(true);
   const [mesh, setMesh] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [cardUrl, setCardUrl] = useState('');
+  const [, setCardUrl] = useState('');
   const [qrInfo, setQrInfo] = useState({ version: 0, moduleSize: 0 });
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -169,14 +169,13 @@ function TagEditor() {
       const url = buildCardUrl(name, phone, phone2, description, minimalQR);
 
       // Generazione effettiva (sia per la mesh che per le statistiche del semaforo)
-      const qrMatrix = generateQRMatrix(url, 0, 'L');
+      // 'M' = 15% error correction — più robusto su tag fisici graffiati o con luce difficile
+      const qrMatrix = generateQRMatrix(url, 0, 'M');
       const count = qrMatrix.length;
       const version = (count - 17) / 4;
 
-      // Dimensione reale modulo
-      const scale = diameter / 30;
-      const physicalQrSize = 21 * scale + (scale > 1 ? (scale - 1) * 2 : 0);
-      const mSize = physicalQrSize / count;
+      // Dimensione reale modulo (usa getTagConfig per evitare duplicazione della formula)
+      const mSize = getTagConfig(diameter).qrSize / count;
 
       setQrInfo({ version, moduleCount: count, moduleSize: mSize });
 
@@ -203,11 +202,6 @@ function TagEditor() {
     setShowTutorial(false);
   }, [name]);
 
-  const handleExport3MF = useCallback(() => {
-    if (!meshRef.current) return;
-    const fname = `pawtag3d_${name.toLowerCase().replace(/\s+/g, '_')}`;
-    export3MF(meshRef.current, '#FFFFFF', '#1A1A1A', fname);
-  }, [name]);
 
   const handlePreviewCard = useCallback(() => {
     const url = buildCardUrl(name, phone, phone2, description);

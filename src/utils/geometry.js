@@ -40,8 +40,8 @@ export function getTagConfig(diameter = 30) {
     segments: 64,
     qrSize: 21 * scale + (scale > 1 ? (scale - 1) * 2 : 0), // Espande l'area QR più che proporzionalmente
     qrYOffset: -1.5 * scale,
-    textW: 24 * scale,
-    textH: 15 * scale,
+    textW: 25 * scale,
+    textH: 16 * scale,
     textYOffset: -2 * scale,
   };
 }
@@ -110,23 +110,14 @@ function buildBackCapExport(name, phone, phone2, TAG, raise) {
     phone2 ? phone2.slice(0, 16) : null
   ].filter(Boolean);
 
-  const maxLen = Math.max(...lines.map(l => l.length), 1);
-  const totalPixCols = maxLen * FONT_COLS + (maxLen - 1) * FONT_COL_GAP;
-  const totalPixRows = lines.length * FONT_ROWS + (lines.length - 1) * FONT_ROW_GAP;
-  const cellMm = Math.min(TAG.textW / totalPixCols, TAG.textH / totalPixRows);
-
-  const yCenters = [];
-  const startY = TAG.textYOffset + (lines.length - 1) * (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
-  for (let i = 0; i < lines.length; i++) {
-    yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
-  }
-
-  const half = cellMm * 0.6;
+  const { scaledCellMm, yCenters } = calcTextLayout(lines, TAG);
 
   for (let li = 0; li < lines.length; li++) {
     const text = lines[li];
     if (!text) continue;
 
+    const cellMm = scaledCellMm[li];
+    const half = cellMm * 0.6;
     const n = text.length;
     const lineCols = n * FONT_COLS + (n - 1) * FONT_COL_GAP;
     const yCenter = yCenters[li];
@@ -233,9 +224,6 @@ function build3MFQRFill(qrModules, TAG, raise) {
   return mergeGeos(geos);
 }
 
-function build3MFTextFill(animalName, phone) {
-  return buildTextPixels(animalName, phone);
-}
 
 // ---------------------------------------------------------------------------
 // Bitmap font 5×7 (A-Z, 0-9, spazio e punteggiatura comune)
@@ -244,9 +232,9 @@ function build3MFTextFill(animalName, phone) {
 const FONT_ROWS = 7;
 const FONT_COLS = 5;
 const FONT_COL_GAP = 1;   // pixel di gap tra caratteri adiacenti
-const FONT_ROW_GAP = 4;   // riga vuota tra le due righe di testo
+// FONT_ROW_GAP rimosso — gap gestito in mm da calcTextLayout (LINE_GAP_MM)
 
-/* eslint-disable no-multi-spaces */
+ 
 const BITMAP_FONT = {
   'A': [14, 17, 17, 31, 17, 17, 17], 'B': [30, 17, 17, 30, 17, 17, 30],
   'C': [14, 17, 16, 16, 16, 17, 14], 'D': [30, 17, 17, 17, 17, 17, 30],
@@ -271,7 +259,74 @@ const BITMAP_FONT = {
   '/': [1, 1, 2, 4, 8, 16, 16], ':': [0, 4, 4, 0, 4, 4, 0],
   '?': [14, 17, 1, 2, 4, 0, 4],
 };
-/* eslint-enable no-multi-spaces */
+
+// ---------------------------------------------------------------------------
+// calcTextLayout — calcola cellMm per-linea e yCenters per buildTextPixels
+// e buildBackCapExport.
+//
+// Ogni riga viene dimensionata indipendentemente per riempire textW:
+//   "LUNA" (4 char) → cellMm ≈ 1.04mm  vs  "3331234567" (10 char) → 0.41mm
+// Così il nome è visibilmente più grande del numero di telefono.
+// Un hScale comune scala tutto se l'altezza totale supera textH.
+// ---------------------------------------------------------------------------
+function calcTextLayout(lines, TAG) {
+  const LINE_GAP_MM = 1.5; // gap fisso in mm tra righe successive
+  const safeRadius = TAG.radius - 0.5;
+
+  const computeCellMm = (line, width) => {
+    const n = line.length;
+    const pixCols = n * FONT_COLS + Math.max(0, n - 1) * FONT_COL_GAP;
+    return pixCols > 0 ? width / pixCols : 1;
+  };
+
+  // Primo passaggio: stima le posizioni Y usando textW (larghezza rettangolare)
+  const roughCellMm = lines.map(line => computeCellMm(line, TAG.textW));
+  const roughTotalH = roughCellMm.reduce((s, c) => s + FONT_ROWS * c, 0)
+    + (lines.length - 1) * LINE_GAP_MM;
+  const roughHScale = Math.min(1, TAG.textH / roughTotalH);
+  const roughScaled = roughCellMm.map(c => c * roughHScale);
+  const roughGap = LINE_GAP_MM * roughHScale;
+  const roughTopY = TAG.textYOffset + (roughTotalH * roughHScale) / 2;
+
+  let curTop = roughTopY;
+  const roughYCenters = roughScaled.map(c => {
+    const center = curTop - (FONT_ROWS * c) / 2;
+    curTop -= FONT_ROWS * c + roughGap;
+    return center;
+  });
+
+  // Secondo passaggio: per ciascuna riga, vincola la larghezza alla corda del cerchio
+  // alla Y più estrema della riga (non il centro, ma il bordo in alto/basso dei caratteri)
+  // poiché i pixel del font si estendono ±3*cellMm dal centro della riga.
+  const lineCellMm = lines.map((line, i) => {
+    const yc = roughYCenters[i];
+    const rc = roughScaled[i];
+    // La riga più estrema (più lontana dal centro del disco) è a |yc| + 3*rc
+    const yExtremeMag = Math.abs(yc) + 3 * rc;
+    const circleWidth = 2 * Math.sqrt(Math.max(0, safeRadius * safeRadius - yExtremeMag * yExtremeMag));
+    const effectiveWidth = Math.min(TAG.textW, circleWidth);
+    return computeCellMm(line, effectiveWidth);
+  });
+
+  // Layout finale con le dimensioni vincolate al cerchio
+  const totalH = lineCellMm.reduce((s, c) => s + FONT_ROWS * c, 0)
+    + (lines.length - 1) * LINE_GAP_MM;
+  const hScale = Math.min(1, TAG.textH / totalH);
+  const scaledCellMm = lineCellMm.map(c => c * hScale);
+  const scaledGap = LINE_GAP_MM * hScale;
+
+  const totalHScaled = totalH * hScale;
+  const topY = TAG.textYOffset + totalHScaled / 2;
+
+  curTop = topY;
+  const yCenters = scaledCellMm.map(c => {
+    const center = curTop - (FONT_ROWS * c) / 2;
+    curTop -= FONT_ROWS * c + scaledGap;
+    return center;
+  });
+
+  return { scaledCellMm, yCenters };
+}
 
 // ---------------------------------------------------------------------------
 // buildTextPixels — testo pixellato sul retro (bitmap 5×7)
@@ -281,7 +336,7 @@ const BITMAP_FONT = {
 // ---------------------------------------------------------------------------
 function buildTextPixels(name, phone, phone2, TAG) {
   const z0 = -(TAG.thickness / 2);  // -1.75: faccia retro del disco
-  const depth = TAG.engraveDepth;       // 0.4mm (o 1.0mm in base alla config)
+  const depth = TAG.engraveDepth;
 
   const lines = [
     name.toUpperCase().slice(0, 16),
@@ -289,26 +344,16 @@ function buildTextPixels(name, phone, phone2, TAG) {
     phone2 ? phone2.slice(0, 16) : null
   ].filter(Boolean);
 
-  // Calcola cellMm per fittare tutte le righe nell'area textW × textH
-  const maxLen = Math.max(...lines.map(l => l.length), 1);
-  const totalPixCols = maxLen * FONT_COLS + (maxLen - 1) * FONT_COL_GAP;
-  const totalPixRows = lines.length * FONT_ROWS + (lines.length - 1) * FONT_ROW_GAP;
-  const cellMm = Math.min(TAG.textW / totalPixCols, TAG.textH / totalPixRows);
+  const { scaledCellMm, yCenters } = calcTextLayout(lines, TAG);
 
-  // Centri Y delle linee (dinamico per 1, 2 o 3 righe)
-  const yCenters = [];
-  const startY = TAG.textYOffset + (lines.length - 1) * (FONT_ROWS + FONT_ROW_GAP) / 2 * cellMm;
-  for (let i = 0; i < lines.length; i++) {
-    yCenters.push(startY - i * (FONT_ROWS + FONT_ROW_GAP) * cellMm);
-  }
-
-  const half = cellMm * 0.6;  // mezzo lato pixel (5% di gap per chiarezza)
   const geos = [];
 
   for (let li = 0; li < lines.length; li++) {
     const text = lines[li];
     if (!text) continue;
 
+    const c = scaledCellMm[li];
+    const half = c * 0.55; // leggero overlap per coprire underextrusion FDM
     const n = text.length;
     const lineCols = n * FONT_COLS + (n - 1) * FONT_COL_GAP;
     const yCenter = yCenters[li];
@@ -318,17 +363,14 @@ function buildTextPixels(name, phone, phone2, TAG) {
       const charColStart = ci * (FONT_COLS + FONT_COL_GAP);
 
       for (let r = 0; r < FONT_ROWS; r++) {
-        for (let c = 0; c < FONT_COLS; c++) {
-          if (!((bitmap[r] >> (FONT_COLS - 1 - c)) & 1)) continue;
+        for (let col = 0; col < FONT_COLS; col++) {
+          if (!((bitmap[r] >> (FONT_COLS - 1 - col)) & 1)) continue;
 
-          const pixCol = charColStart + c;
-          // cxRaw: posizione non-specchiata (leggibile da fronte)
-          const cxRaw = (-lineCols / 2 + pixCol + 0.5) * cellMm;
-          // cx: specchiato → leggibile da retro; la Shape stessa rimane CCW (no fix winding)
-          const cx = -cxRaw;
-          const cy = yCenter + (3 - r) * cellMm;
+          const pixCol = charColStart + col;
+          const cxRaw = (-lineCols / 2 + pixCol + 0.5) * c;
+          const cx = -cxRaw; // specchiato → leggibile da retro
+          const cy = yCenter + (3 - r) * c;
 
-          // Scarta pixel fuori dal disco
           if (Math.sqrt(cx * cx + cy * cy) > TAG.radius - 0.5) continue;
 
           const s = new THREE.Shape();
@@ -419,9 +461,6 @@ function buildBackBorder(discShape, TAG) {
 // ---------------------------------------------------------------------------
 // Text fill preview: testo pixellato sul retro (Colore 2)
 // ---------------------------------------------------------------------------
-function buildTextFill(name, phone) {
-  return buildTextPixels(name, phone);
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
