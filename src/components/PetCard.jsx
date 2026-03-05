@@ -1,7 +1,11 @@
 
+import { useTranslation } from 'react-i18next';
+
 export default function PetCard({ name, phone, phone2, description }) {
-  const displayName = name || 'Il mio amico';
-  const displayPhone = phone || 'N/D';
+  const { t } = useTranslation();
+
+  const displayName = name || t('defaultPetName');
+  const displayPhone = phone || t('phoneNA');
 
   return (
     <div className="petcard-overlay">
@@ -18,23 +22,23 @@ export default function PetCard({ name, phone, phone2, description }) {
 
         <div className="petcard-contacts">
           <div className="contact-item">
-            <p className="petcard-label">📍 Contatto principale</p>
+            <p className="petcard-label">{t('labelPrimaryContact')}</p>
             <a className="petcard-phone" href={`tel:${displayPhone.replace(/\s/g, '')}`}>{displayPhone}</a>
-            <a className="petcard-call-btn" href={`tel:${displayPhone.replace(/\s/g, '')}`}>Chiama ora</a>
+            <a className="petcard-call-btn" href={`tel:${displayPhone.replace(/\s/g, '')}`}>{t('btnCallNow')}</a>
           </div>
 
           {phone2 && (
             <div className="contact-item">
-              <p className="petcard-label">📍 Contatto secondario</p>
+              <p className="petcard-label">{t('labelSecondaryContact')}</p>
               <a className="petcard-phone" href={`tel:${phone2.replace(/\s/g, '')}`}>{phone2}</a>
-              <a className="petcard-call-btn" href={`tel:${phone2.replace(/\s/g, '')}`}>Chiama ora</a>
+              <a className="petcard-call-btn" href={`tel:${phone2.replace(/\s/g, '')}`}>{t('btnCallNow')}</a>
             </div>
           )}
         </div>
 
         <p className="petcard-footer">
-          <strong>Hai trovato questo animale?</strong><br />
-          Scansiona il QR sulla medaglietta oppure usa i contatti qui sopra per aiutarlo a tornare a casa. ❤️
+          <strong>{t('footerFoundAnimal')}</strong><br />
+          {t('footerFoundAnimalDesc')}
         </p>
       </div>
     </div>

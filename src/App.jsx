@@ -1,5 +1,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import TagScene from './components/TagScene';
 import PetCard from './components/PetCard';
 import { buildTagMesh, getTagConfig } from './utils/geometry';
@@ -9,6 +10,13 @@ import LZString from 'lz-string';
 import { compressWithDict, decompressWithDict } from './utils/dictionary';
 import './App.css';
 
+const SUPPORTED_LANGS = [
+  { code: 'it', flag: '🇮🇹' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'es', flag: '🇪🇸' },
+  { code: 'fr', flag: '🇫🇷' },
+  { code: 'de', flag: '🇩🇪' },
+];
 
 function readCardHash() {
   const hash = window.location.hash;
@@ -92,8 +100,6 @@ function buildCardUrl(name, phone, phone2, description, minimal = false) {
     dictDesc
   ].join(':');
 
-  // FORZA CASE INSENSITIVE / ALPHANUMERIC
-  // Il prefisso della URL viene forzato in MAIUSCOLO per restare in Alphanumeric mode nel QR
   const baseUpper = base.toUpperCase();
   const extremeUrl = `${baseUpper}#e:${extremeData}`;
 
@@ -109,8 +115,6 @@ function buildCardUrl(name, phone, phone2, description, minimal = false) {
   const compressed = LZString.compressToEncodedURIComponent(rawData.join('|'));
   const compressedUrl = `${base}#c/${compressed}`;
 
-  // Selection: prioritize extremeUrl, then universalUrl if they are close in size
-  // because they stay in the highly efficient Alphanumeric mode.
   const urls = [extremeUrl, universalUrl, pipeUrl, compressedUrl];
   return urls.reduce((a, b) => a.length <= b.length ? a : b);
 }
@@ -139,26 +143,31 @@ export default function App() {
 
 
 function TagEditor() {
+  const { t, i18n } = useTranslation();
+
   const [name, setName] = useState('LUNA');
   const [phone, setPhone] = useState('3331234567');
   const [phone2, setPhone2] = useState('');
   const [description] = useState('');
   const [diameter, setDiameter] = useState(30);
   const [minimalQR, setMinimalQR] = useState(false);
+  const [useNFC, setUseNFC] = useState(false);
   const [autoRot] = useState(true);
   const [mesh, setMesh] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [, setCardUrl] = useState('');
   const [qrInfo, setQrInfo] = useState({ version: 0, moduleSize: 0 });
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showNFCGuide, setShowNFCGuide] = useState(false);
+  const [nfcStatus, setNfcStatus] = useState(null); // null | 'writing' | 'success' | 'error'
+  const [nfcError, setNfcError] = useState('');
 
   const meshRef = useRef(null);
+  const cardUrlRef = useRef('');
 
-  // Genera la mesh CSG
   const handleGenerate = useCallback(async () => {
-    if (!name.trim()) { setError('Inserisci il nome dell\'animale.'); return; }
-    if (!phone.trim()) { setError('Inserisci il numero di telefono.'); return; }
+    if (!name.trim()) { setError(t('errName')); return; }
+    if (!phone.trim()) { setError(t('errPhone')); return; }
 
     setLoading(true);
     setError(null);
@@ -167,30 +176,27 @@ function TagEditor() {
       await new Promise(r => setTimeout(r, 50));
 
       const url = buildCardUrl(name, phone, phone2, description, minimalQR);
+      cardUrlRef.current = url;
 
-      // Generazione effettiva (sia per la mesh che per le statistiche del semaforo)
-      // 'M' = 15% error correction — più robusto su tag fisici graffiati o con luce difficile
       const qrMatrix = generateQRMatrix(url, 0, 'M');
       const count = qrMatrix.length;
       const version = (count - 17) / 4;
 
-      // Dimensione reale modulo (usa getTagConfig per evitare duplicazione della formula)
       const mSize = getTagConfig(diameter).qrSize / count;
 
       setQrInfo({ version, moduleCount: count, moduleSize: mSize });
 
-      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white', diameter);
+      const newMesh = buildTagMesh(qrMatrix, name, phone, phone2, 'white', diameter, useNFC);
 
       meshRef.current = newMesh;
       setMesh(newMesh);
-      setCardUrl(url);
     } catch (err) {
       console.error(err);
-      setError('Errore nella generazione. Riprova.');
+      setError(t('errGeneral'));
     } finally {
       setLoading(false);
     }
-  }, [name, phone, phone2, description, minimalQR, diameter]);
+  }, [name, phone, phone2, description, minimalQR, diameter, useNFC, t]);
 
   const handleExportSTL = useCallback(() => {
     if (!meshRef.current) return;
@@ -202,6 +208,26 @@ function TagEditor() {
     setShowTutorial(false);
   }, [name]);
 
+  const handleWriteNFC = useCallback(async () => {
+    const url = cardUrlRef.current;
+    if (!url) return;
+
+    if (!('NDEFReader' in window)) {
+      setShowNFCGuide(true);
+      return;
+    }
+
+    try {
+      setNfcStatus('writing');
+      setNfcError('');
+      const ndef = new window.NDEFReader();
+      await ndef.write({ records: [{ recordType: 'url', data: url }] });
+      setNfcStatus('success');
+    } catch (e) {
+      setNfcStatus('error');
+      setNfcError(e.message);
+    }
+  }, []);
 
   const handlePreviewCard = useCallback(() => {
     const url = buildCardUrl(name, phone, phone2, description);
@@ -209,6 +235,14 @@ function TagEditor() {
   }, [name, phone, phone2, description]);
 
   const hasMesh = mesh && !loading;
+
+  const printHint = qrInfo.moduleSize > 0.8
+    ? t('hintGood')
+    : qrInfo.moduleSize > 0.5
+      ? t('hintMedium')
+      : t('hintPoor');
+
+  const printClass = qrInfo.moduleSize > 0.8 ? 'good' : qrInfo.moduleSize > 0.6 ? 'medium' : 'hard';
 
   return (
     <>
@@ -219,14 +253,26 @@ function TagEditor() {
         <aside className="sidebar">
           <div className="sidebar-header">
             <img src="/logo.png" alt="PawTag Logo" className="app-logo" />
-            <h1 className="app-title">PawTag 3D</h1>
+            <h1 className="app-title">{t('appTitle')}</h1>
           </div>
-          <p className="app-subtitle">
-            Crea una medaglietta intelligente per il tuo compagno d'avventure. 🐾
-          </p>
+
+          <div className="lang-switcher">
+            {SUPPORTED_LANGS.map(({ code, flag }) => (
+              <button
+                key={code}
+                className={`lang-btn${i18n.resolvedLanguage === code ? ' active' : ''}`}
+                onClick={() => i18n.changeLanguage(code)}
+                title={code.toUpperCase()}
+              >
+                {flag}
+              </button>
+            ))}
+          </div>
+
+          <p className="app-subtitle">{t('appSubtitle')}</p>
 
           <div className="form-group">
-            <label htmlFor="animal-name">Nome animale</label>
+            <label htmlFor="animal-name">{t('labelPetName')}</label>
             <input
               id="animal-name"
               type="text"
@@ -238,7 +284,7 @@ function TagEditor() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">📞 Primo numero</label>
+            <label htmlFor="phone">{t('labelPhone1')}</label>
             <input
               id="phone"
               type="tel"
@@ -250,7 +296,7 @@ function TagEditor() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone2">📞 Secondo numero (opzionale)</label>
+            <label htmlFor="phone2">{t('labelPhone2')}</label>
             <input
               id="phone2"
               type="tel"
@@ -262,7 +308,9 @@ function TagEditor() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="diameter">📏 Diametro Medaglia: <strong>{diameter}mm</strong></label>
+            <label htmlFor="diameter">
+              {t('labelDiameter')} <strong>{diameter}mm</strong>
+            </label>
             <input
               id="diameter"
               type="range"
@@ -274,43 +322,57 @@ function TagEditor() {
             />
           </div>
 
-          <div className="form-group form-check form-row" title="Rendi il QR più semplice escludendo note e secondo telefono">
+          <div className="nfc-toggle-group">
+            <div className="nfc-toggle-row">
+              <span className="nfc-toggle-label">
+                <span className="nfc-icon">📡</span>
+                <span>
+                  <strong>{t('nfcModeTitle')}</strong>
+                  <small>{t('nfcModeDesc')}</small>
+                </span>
+              </span>
+              <label className="toggle-switch">
+                <input type="checkbox" checked={useNFC} onChange={e => setUseNFC(e.target.checked)} />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+            {useNFC && (
+              <div className="nfc-info-chip">{t('nfcChipInfo')}</div>
+            )}
+          </div>
+
+          <div className="form-group form-check form-row" title={t('titleSimplifiedQR')}>
             <input
               id="minimal-qr"
               type="checkbox"
               checked={minimalQR}
               onChange={e => setMinimalQR(e.target.checked)}
             />
-            <label htmlFor="minimal-qr">✨ QR Semplificato (Consigliato)</label>
+            <label htmlFor="minimal-qr">{t('labelSimplifiedQR')}</label>
           </div>
 
-          <div className={`printability-box ${qrInfo.moduleSize > 0.8 ? 'good' : qrInfo.moduleSize > 0.6 ? 'medium' : 'hard'}`}>
+          <div className={`printability-box ${printClass}`}>
             <div className="print-header">
               <span className="print-icon">
                 {qrInfo.moduleSize > 0.8 ? '✅' : qrInfo.moduleSize > 0.6 ? '⚠️' : '❌'}
               </span>
-              <strong>Qualità Stampa</strong>
+              <strong>{t('printQualityTitle')}</strong>
             </div>
             <div className="print-details">
-              <span>QR Versione: {qrInfo.version || '-'}</span>
-              <span>Lato Modulo: {qrInfo.moduleSize ? qrInfo.moduleSize.toFixed(2) + 'mm' : '-'}</span>
+              <span>{t('labelQRVersion')} {qrInfo.version || '-'}</span>
+              <span>{t('labelModuleSize')} {qrInfo.moduleSize ? qrInfo.moduleSize.toFixed(2) + 'mm' : '-'}</span>
             </div>
-            <p className="print-hint">
-              {qrInfo.moduleSize > 0.8
-                ? 'Ottimo! Stampabile anche con ugello da 0.4mm.'
-                : qrInfo.moduleSize > 0.5
-                  ? 'Accettabile. Consigliato ugello 0.2mm o diametro > 35mm.'
-                  : 'Troppo dettagliato. Aumenta il diametro o usa QR Semplice.'}
-            </p>
+            <p className="print-hint">{printHint}</p>
           </div>
 
           <div className="spec-box">
-            <h3>Specifiche</h3>
+            <h3>{t('specsTitle')}</h3>
             <ul>
-              <li>Diametro: <strong>{diameter} mm</strong></li>
-              <li>Spessore: <strong>3.6 mm</strong></li>
-              <li>Foro: <strong>Ø 4 mm</strong></li>
-              <li>Incisione: <strong>1.0 mm</strong></li>
+              <li>{t('specDiameter')} <strong>{diameter} mm</strong></li>
+              <li>{t('specThickness')} <strong>3.6 mm</strong></li>
+              <li>{t('specHole')} <strong>Ø 4 mm</strong></li>
+              <li>{t('specEngrave')} <strong>0.6 mm</strong></li>
+              {useNFC && <li>{t('specNFCCavity')} <strong>Ø25mm × 0.4mm (centro)</strong></li>}
             </ul>
           </div>
 
@@ -319,19 +381,31 @@ function TagEditor() {
             onClick={handleGenerate}
             disabled={loading}
           >
-            {loading ? 'Sto lavorando...' : '✨ Genera anteprima'}
+            {loading ? t('btnGenerating') : t('btnGenerate')}
           </button>
 
           {hasMesh && (
             <button className="btn btn-secondary" onClick={handlePreviewCard}>
-              👁️ Anteprima pagina QR
+              {t('btnPreviewCard')}
             </button>
+          )}
+
+          {hasMesh && useNFC && (
+            <button className="btn btn-nfc" onClick={handleWriteNFC} disabled={nfcStatus === 'writing'}>
+              {nfcStatus === 'writing' ? t('btnWritingNFC') : t('btnWriteNFC')}
+            </button>
+          )}
+          {nfcStatus === 'success' && (
+            <p className="nfc-success-msg">{t('msgNFCSuccess')}</p>
+          )}
+          {nfcStatus === 'error' && (
+            <p className="nfc-error-msg">{t('msgNFCErrorPrefix')} {nfcError}</p>
           )}
 
           {hasMesh && (
             <div className="export-group">
               <button className="btn btn-export" onClick={handleExportSTL}>
-                📥 Scarica STL
+                {t('btnDownloadSTL')}
               </button>
             </div>
           )}
@@ -339,13 +413,10 @@ function TagEditor() {
           {error && <p className="error-msg">{error}</p>}
 
           <div className="about-section">
-            <h3>Cos'è PawTag 3D?</h3>
-            <p>
-              Un progetto per la <strong>sicurezza</strong> dei nostri amici.
-              I dati sono salvati nel QR: nessuna registrazione, massima privacy.
-            </p>
+            <h3>{t('aboutTitle')}</h3>
+            <p dangerouslySetInnerHTML={{ __html: t('aboutDesc') }} />
             <div className="creator-info">
-              Fatto con ❤️ da <span>Luigi Mazzarella</span>
+              {t('madeBy')} <span>Luigi Mazzarella</span>
             </div>
           </div>
         </aside>
@@ -356,20 +427,20 @@ function TagEditor() {
           ) : (
             <div className="canvas-placeholder">
               {loading ? (
-                <p>Costruzione geometria in corso…</p>
+                <p>{t('msgLoadingGeometry')}</p>
               ) : (
                 <div className="welcome-card">
                   <div className="welcome-icon">🐾</div>
-                  <h2 className="welcome-title">Crea la medaglietta del tuo animale</h2>
+                  <h2 className="welcome-title">{t('welcomeTitle')}</h2>
                   <p className="welcome-desc">
-                    Questo tool genera una <strong>medaglietta 3D stampabile</strong> per il collare del tuo gatto o cane.<br />
-                    Sul fronte viene inciso un <strong>QR code</strong> che rimanda a una pagina con nome e contatto del proprietario.<br />
-                    Sul retro vengono incisi <strong>nome e telefono</strong> in rilievo.
+                    <span dangerouslySetInnerHTML={{ __html: t('welcomeDescLine1') }} /><br />
+                    <span dangerouslySetInnerHTML={{ __html: t('welcomeDescLine2') }} /><br />
+                    <span dangerouslySetInnerHTML={{ __html: t('welcomeDescLine3') }} />
                   </p>
                   <ol className="welcome-steps">
-                    <li>Inserisci il <strong>nome</strong> dell'animale e il tuo <strong>numero di telefono</strong></li>
-                    <li>Clicca <strong>"Genera anteprima"</strong> per vedere la medaglietta in 3D</li>
-                    <li>Scarica il file <strong>STL</strong>per la stampa 3D bicolore</li>
+                    <li dangerouslySetInnerHTML={{ __html: t('welcomeStep1') }} />
+                    <li dangerouslySetInnerHTML={{ __html: t('welcomeStep2') }} />
+                    <li dangerouslySetInnerHTML={{ __html: t('welcomeStep3') }} />
                   </ol>
                 </div>
               )}
@@ -381,22 +452,15 @@ function TagEditor() {
       {showTutorial && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Preparazione alla stampa 3D</h2>
-            <p className="tutorial-text">
-              Per ottenere un risultato bicolore perfetto con il file STL:
-              <br /><br />
-              Nello slicer (es. Bambu Studio o PrusaSlicer),
-              usa lo strumento <strong>"Dipingi"</strong> (Paint Tool),
-              seleziona il tipo di tool <strong>"Height Range"</strong> e imposta l'altezza a <strong> 1 mm</strong>,
-              poi spostati alla base del qrcode o imposta l'altezza a <strong>2,61 mm</strong> e colora tutto il resto.
-            </p>
+            <h2>{t('tutorialTitle')}</h2>
+            <p className="tutorial-text" dangerouslySetInnerHTML={{ __html: t('tutorialText') }} />
 
             <div className="tutorial-info-box">
               <div className="info-header">
                 <span className="info-icon">💡</span><p><strong>INFO:</strong></p>
               </div>
-              <p>È consigliabile usare un <strong>ugello da 0.2mm</strong> per una massima leggibilità.</p>
-              <p>Se si deisdera stampare con <strong>ungello da 0.4mm</strong>, si consiglia di aumentare il diametro della medaglia ad almeno <strong>40mm</strong></p>
+              <p dangerouslySetInnerHTML={{ __html: t('tutorialInfoNozzle') }} />
+              <p dangerouslySetInnerHTML={{ __html: t('tutorialInfoNozzle04') }} />
             </div>
 
             <div className="tutorial-media-container">
@@ -408,22 +472,83 @@ function TagEditor() {
                 playsInline
                 className="tutorial-video"
               >
-                Il tuo browser non supporta il tag video.
+                {t('videoFallback')}
               </video>
             </div>
+
+            {useNFC && (
+              <div className="nfc-tutorial-section">
+                <h3>{t('nfcTutorialTitle')}</h3>
+                <p className="nfc-tutorial-intro" dangerouslySetInnerHTML={{ __html: t('nfcTutorialIntro') }} />
+                <a
+                  className="nfc-amazon-link"
+                  href="https://www.amazon.it/s?k=NFC+tag+25mm+coin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('nfcAmazonLink')}
+                </a>
+                <ol className="nfc-steps">
+                  <li dangerouslySetInnerHTML={{ __html: t('nfcStep1') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('nfcStep2') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('nfcStep3') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('nfcStep4') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('nfcStep5') }} />
+                </ol>
+              </div>
+            )}
 
             <div className="modal-actions">
               <button
                 className="btn btn-secondary"
                 onClick={() => setShowTutorial(false)}
               >
-                Annulla
+                {t('btnCancel')}
               </button>
               <button
                 className="btn btn-primary"
                 onClick={triggerDownloadSTL}
               >
-                Scarica STL ora
+                {t('btnDownloadNow')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNFCGuide && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>{t('nfcGuideTitle')}</h2>
+
+            <div className="nfc-guide-platform">
+              <h3>{t('androidGuideTitle')}</h3>
+              <ol className="nfc-steps">
+                <li dangerouslySetInnerHTML={{ __html: t('androidStep1') }} />
+                <li dangerouslySetInnerHTML={{ __html: t('androidStep2') }} />
+                <li dangerouslySetInnerHTML={{ __html: t('androidStep3') }} />
+                <li>{t('androidStep4')}</li>
+              </ol>
+            </div>
+
+            <div className="nfc-guide-platform">
+              <h3>{t('iosGuideTitle')}</h3>
+              <p dangerouslySetInnerHTML={{ __html: t('iosGuideIntro') }} />
+              <ol className="nfc-steps">
+                <li dangerouslySetInnerHTML={{ __html: t('iosStep1') }} />
+                <li dangerouslySetInnerHTML={{ __html: t('iosStep2') }} />
+                <li dangerouslySetInnerHTML={{ __html: t('iosStep3') }} />
+                <li>
+                  {t('iosStep4Label')}
+                  <div className="nfc-url-box">{cardUrlRef.current}</div>
+                </li>
+                <li dangerouslySetInnerHTML={{ __html: t('iosStep5') }} />
+              </ol>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowNFCGuide(false)}>
+                {t('btnClose')}
               </button>
             </div>
           </div>
