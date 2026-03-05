@@ -36,7 +36,7 @@ export function getTagConfig(diameter = 30) {
     thickness: 3.6,
     holeRadius: 2,
     holeY: radius - 3, // Posiziona il foro a 3mm dal bordo superiore
-    engraveDepth: 1.0,
+    engraveDepth: 0.6,
     segments: 64,
     qrSize: 21 * scale + (scale > 1 ? (scale - 1) * 2 : 0), // Espande l'area QR più che proporzionalmente
     qrYOffset: -1.5 * scale,
@@ -63,7 +63,19 @@ function makeDiscShape(TAG) {
   return shape;
 }
 
+/** Aggiunge un foro circolare a una Shape esistente */
+function addCircleHole(shape, cx, cy, r, segments = 32) {
+  const path = new THREE.Path();
+  path.absarc(cx, cy, r, 0, Math.PI * 2, true);
+  shape.holes.push(path);
+}
+
 const getExtrudeSettings = (TAG) => ({ bevelEnabled: false, curveSegments: TAG.segments });
+
+// Dimensioni tasca NFC (cavità cilindrica al centro dello spessore del disco)
+const NFC_CAVITY_RADIUS   = 12.3; // mm — diametro tasca 24.6mm (Ø25mm - tolleranza FDM)
+const NFC_CAVITY_Y_OFFSET = -2.5; // mm — offset verso il basso: 0.2mm clearance dal foro portachiavi e dal bordo disco
+const NFC_CAVITY_DEPTH    = 0.4;  // mm — altezza cavità
 
 // ---------------------------------------------------------------------------
 // Strato base (pieno, senza incisioni)
@@ -74,6 +86,41 @@ function buildBase(discShape, TAG) {
   // Centra su Z: da z=-(thickness/2)+engraveDepth a z=+(thickness/2)-engraveDepth
   geo.translate(0, 0, -(TAG.thickness / 2) + TAG.engraveDepth);
   return geo;
+}
+
+/**
+ * Strato base con cavità NFC cilindrica centrata a Z=0.
+ * Struttura a 3 pezzi NON sovrapposti:
+ *   - Lastra inferiore (disco pieno): z = startZ → -NFC_HALF
+ *   - Anello esterno   (disco con foro NFC): z = -NFC_HALF → +NFC_HALF  ← pareti cavità
+ *   - Lastra superiore (disco pieno): z = +NFC_HALF → startZ+baseH
+ * Le superfici coincidenti sono solo piane (z = ±NFC_HALF, zona anulare)
+ * e non cilindriche → nessun glitch STL da superfici parallele opposte.
+ */
+function buildBaseWithNFCCavity(discShape, TAG) {
+  const NFC_HALF = NFC_CAVITY_DEPTH / 2;                         // 0.2mm
+  const baseH    = TAG.thickness - TAG.engraveDepth * 2;         // 2.4mm (con engraveDepth=0.6)
+  const slabH    = baseH / 2 - NFC_HALF;                         // 1.0mm
+  const startZ   = -(TAG.thickness / 2) + TAG.engraveDepth;      // -1.2mm
+
+  // Lastra inferiore: disco pieno, forma il pavimento della cavità
+  const botGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  botGeo.translate(0, 0, startZ);   // z = -1.2 → -0.2
+
+  // Lastra superiore: disco pieno, forma il soffitto della cavità
+  const topGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  topGeo.translate(0, 0, NFC_HALF); // z = +0.2 → +1.2
+
+  // Anello: foro portachiavi + foro NFC.
+  // I due cerchi si sovrappongono di ~0.5mm (zona y≈10–10.5) ma l'area è minuscola;
+  // EarCut gestisce piccoli overlap producendo un artefatto trascurabile,
+  // molto meglio del plug visibile che si otterrebbe omettendo il foro portachiavi.
+  const ringShape = cloneShapeWithHole(discShape, TAG);
+  addCircleHole(ringShape, 0, NFC_CAVITY_Y_OFFSET, NFC_CAVITY_RADIUS, 32);
+  const ringGeo = new THREE.ExtrudeGeometry(ringShape, { ...getExtrudeSettings(TAG), depth: NFC_CAVITY_DEPTH });
+  ringGeo.translate(0, 0, -NFC_HALF); // z = -0.2 → +0.2
+
+  return mergeGeos([botGeo, topGeo, ringGeo].map(g => g.index ? g.toNonIndexed() : g));
 }
 
 // ===========================================================================
@@ -95,6 +142,32 @@ function buildBodyExport(discShape, TAG, raise) {
   geo.translate(0, 0, -depth / 2);
   geo.computeVertexNormals();
   return geo;
+}
+
+// Corpo export con cavità NFC al centro — stesso approccio 3 pezzi di buildBaseWithNFCCavity
+function buildBodyExportWithNFC(discShape, TAG, raise) {
+  const depth    = TAG.thickness - raise * 2;   // 2.4mm (con engraveDepth=0.6)
+  const NFC_HALF = NFC_CAVITY_DEPTH / 2;        // 0.2mm
+  const halfBody = depth / 2;                   // 1.2mm
+  const slabH    = halfBody - NFC_HALF;         // 1.0mm
+
+  // Lastra inferiore: disco pieno, z = -1.2 → -0.2
+  const botGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  botGeo.translate(0, 0, -halfBody);
+
+  // Lastra superiore: disco pieno, z = +0.2 → +1.2
+  const topGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  topGeo.translate(0, 0, NFC_HALF);
+
+  // Anello con foro NFC + foro portachiavi
+  const ringShape = cloneShapeWithHole(discShape, TAG);
+  addCircleHole(ringShape, 0, NFC_CAVITY_Y_OFFSET, NFC_CAVITY_RADIUS, 32);
+  const ringGeo = new THREE.ExtrudeGeometry(ringShape, { ...getExtrudeSettings(TAG), depth: NFC_CAVITY_DEPTH });
+  ringGeo.translate(0, 0, -NFC_HALF);
+
+  const merged = mergeGeos([botGeo, topGeo, ringGeo].map(g => g.index ? g.toNonIndexed() : g));
+  merged.computeVertexNormals();
+  return merged;
 }
 
 // Back cap export: sottile strato posteriore (depth=RAISE) con fori per il testo
@@ -190,11 +263,33 @@ function buildQRFillExport(qrModules, TAG, raise) {
 //   → Testo visibile sul retro come colore diverso (rilievo 0.4mm)
 // ===========================================================================
 
-function build3MFBody(TAG) {
-  const h = TAG.thickness;                                            // 3.5mm
-  const geo = new THREE.ExtrudeGeometry(makeDiscShape(TAG), { ...getExtrudeSettings(TAG), depth: h });
-  geo.translate(0, 0, -(h / 2));                                      // z = -1.75 → +1.75
-  return geo;
+function build3MFBody(TAG, useNFC = false) {
+  const h = TAG.thickness;
+  const discShape = makeDiscShape(TAG);
+  const geo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: h });
+  geo.translate(0, 0, -(h / 2));
+
+  if (!useNFC) return geo;
+
+  // Stesso approccio 3 pezzi: lastra inferiore + anello + lastra superiore
+  const NFC_HALF = NFC_CAVITY_DEPTH / 2;    // 0.2mm
+  const slabH    = h / 2 - NFC_HALF;        // 1.6mm
+
+  // Lastra inferiore: disco pieno, z = -(h/2) → -0.2
+  const botGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  botGeo.translate(0, 0, -(h / 2));
+
+  // Lastra superiore: disco pieno, z = +0.2 → +(h/2)
+  const topGeo = new THREE.ExtrudeGeometry(discShape, { ...getExtrudeSettings(TAG), depth: slabH });
+  topGeo.translate(0, 0, NFC_HALF);
+
+  // Anello: pareti della cavità, z = -0.2 → +0.2, foro portachiavi incluso
+  const ringShape = cloneShapeWithHole(discShape, TAG);
+  addCircleHole(ringShape, 0, NFC_CAVITY_Y_OFFSET, NFC_CAVITY_RADIUS, 32);
+  const ringGeo = new THREE.ExtrudeGeometry(ringShape, { ...getExtrudeSettings(TAG), depth: NFC_CAVITY_DEPTH });
+  ringGeo.translate(0, 0, -NFC_HALF);
+
+  return mergeGeos([botGeo, topGeo, ringGeo].map(g => g.index ? g.toNonIndexed() : g));
 }
 
 function build3MFQRFill(qrModules, TAG, raise) {
@@ -540,10 +635,12 @@ export function mergeGeos(geos) {
  * @param {string}     phone
  * @param {string}     phone2
  * @param {'white'|'gold'} [colorKey='white']
+ * @param {number}     [diameter=30]
+ * @param {boolean}    [useNFC=false]  Se true, aggiunge tasca circolare sul retro per tag NFC da 13mm
  */
-export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white', diameter = 30) {
+export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white', diameter = 30, useNFC = false) {
   const TAG = getTagConfig(diameter);
-  const RAISE = TAG.engraveDepth; // Altezza rilievo per export STL, usiamo engraveDepth per coerenza
+  const RAISE = TAG.engraveDepth;
 
   const matOpts = MATERIALS[colorKey] ?? MATERIALS.white;
   const material = new THREE.MeshStandardMaterial(matOpts);
@@ -551,7 +648,8 @@ export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white',
   const discShape = makeDiscShape(TAG);
 
   // --- Geometrie del corpo (Colore 1) ---
-  const baseGeo = buildBase(discShape, TAG);
+  // Se useNFC: il corpo centrale ha la cavità cilindrica al centro dello spessore
+  const baseGeo = useNFC ? buildBaseWithNFCCavity(discShape, TAG) : buildBase(discShape, TAG);
   const frontBorderGeo = buildFrontBorder(discShape, qrModules, TAG);
   const backBorderGeo = buildBackBorder(discShape, TAG);
 
@@ -601,8 +699,28 @@ export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white',
     group.add(textMesh);
   }
 
-  // Geometrie per STL: corpo centrale + back cap con fori testo + QR sporgente
-  const exportBody = buildBodyExport(discShape, TAG, RAISE);
+  // Preview NFC placeholder: disco verde semitrasparente al CENTRO dello spessore
+  if (useNFC) {
+    const nfcShape = new THREE.Shape();
+    nfcShape.absarc(0, NFC_CAVITY_Y_OFFSET, NFC_CAVITY_RADIUS - 0.5, 0, Math.PI * 2, false); // raggio 12mm ≈ 25mm tag
+    const nfcGeo = new THREE.ExtrudeGeometry(nfcShape, { bevelEnabled: false, curveSegments: 32, depth: NFC_CAVITY_DEPTH });
+    nfcGeo.translate(0, 0, -NFC_CAVITY_DEPTH / 2); // centrato a z=0
+    const nfcMat = new THREE.MeshStandardMaterial({
+      color: 0x00c853,
+      metalness: 0.1,
+      roughness: 0.5,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const nfcMesh = new THREE.Mesh(nfcGeo, nfcMat);
+    nfcMesh.renderOrder = 2;
+    group.add(nfcMesh);
+  }
+
+  // Geometrie per STL: corpo centrale (con cavità NFC se useNFC) + back cap + QR sporgente
+  const exportBody = useNFC
+    ? buildBodyExportWithNFC(discShape, TAG, RAISE)
+    : buildBodyExport(discShape, TAG, RAISE);
   const exportBackCap = buildBackCapExport(name, phone, phone2, TAG, RAISE);
   const exportQR = buildQRFillExport(qrModules, TAG, RAISE);
 
@@ -610,8 +728,8 @@ export function buildTagMesh(qrModules, name, phone, phone2, colorKey = 'white',
   group._backCapExport = exportBackCap;
   group._qrFillGeoExport = exportQR.attributes.position?.count > 0 ? exportQR : null;
 
-  // Geometrie per 3MF: corpo pieno 3.5mm + QR pilastro + testo in rilievo (overlap → bicolore)
-  const body3mf = build3MFBody(TAG);
+  // Geometrie per 3MF: corpo pieno 3.5mm (con tasca NFC se useNFC) + QR pilastro + testo in rilievo
+  const body3mf = build3MFBody(TAG, useNFC);
   const qr3mf = build3MFQRFill(qrModules, TAG, RAISE);
   const text3mf = buildTextPixels(name, phone, phone2, TAG);
 

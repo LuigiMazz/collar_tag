@@ -87,6 +87,34 @@ body:has(.petcard-overlay),
   margin-bottom: 8px;
 }
 
+/* Language switcher */
+.lang-switcher {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.lang-btn {
+  background: var(--surface-alt);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.lang-btn:hover {
+  opacity: 0.85;
+}
+
+.lang-btn.active {
+  opacity: 1;
+  border-color: var(--primary);
+}
+
 .app-logo {
   width: 48px;
   height: 48px;
@@ -700,4 +728,226 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .btn {
   padding: 16px;
   font-size: 1.1rem;
+}
+
+/* ============================================================
+   NFC Toggle
+   ============================================================ */
+.nfc-toggle-group {
+  background: #f0fafa;
+  border: 1.5px dashed #4FB3AF;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+}
+
+.nfc-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nfc-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nfc-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.nfc-toggle-label span strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #2D3436;
+}
+
+.nfc-toggle-label span small {
+  display: block;
+  font-size: 0.78rem;
+  color: #636e72;
+  margin-top: 2px;
+}
+
+/* iOS-style toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 26px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #4FB3AF;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+.nfc-info-chip {
+  margin-top: 10px;
+  background: #4FB3AF;
+  color: #fff;
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* ============================================================
+   NFC Button & Status
+   ============================================================ */
+.btn-nfc {
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  color: #4FB3AF;
+  border: 2px solid #4FB3AF;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-nfc:hover:not(:disabled) {
+  background: #4FB3AF;
+  color: #fff;
+}
+
+.btn-nfc:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nfc-success-msg {
+  color: #00b894;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+.nfc-error-msg {
+  color: #d63031;
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* ============================================================
+   NFC Tutorial Section (inside STL modal)
+   ============================================================ */
+.nfc-tutorial-section {
+  background: #f0fafa;
+  border: 1.5px solid #4FB3AF;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 20px;
+}
+
+.nfc-tutorial-section h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: #2D3436;
+}
+
+.nfc-tutorial-intro {
+  font-size: 0.9rem;
+  color: #636e72;
+  margin: 0 0 12px;
+}
+
+.nfc-amazon-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #e67e22;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.nfc-amazon-link:hover {
+  text-decoration: underline;
+}
+
+.nfc-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nfc-steps li {
+  font-size: 0.88rem;
+  color: #2D3436;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   NFC Guide Modal (iOS / Android writing instructions)
+   ============================================================ */
+.nfc-guide-platform {
+  background: #f8f9fb;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.nfc-guide-platform h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: #2D3436;
+}
+
+.nfc-guide-platform p {
+  font-size: 0.88rem;
+  color: #636e72;
+  margin: 0 0 10px;
+}
+
+.nfc-url-box {
+  background: #2D3436;
+  color: #81ecec;
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  word-break: break-all;
+  margin-top: 6px;
 }

@@ -12,10 +12,13 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "i18next": "^25.8.14",
+    "i18next-browser-languagedetector": "^8.2.1",
     "lz-string": "^1.5.0",
     "qrcode-generator": "^2.0.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-i18next": "^16.5.4",
     "three": "^0.183.2",
     "three-csg-ts": "^3.2.0",
     "three-stdlib": "^2.36.1"
@@ -24,6 +27,7 @@
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/web": "^0.0.339",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
