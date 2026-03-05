@@ -4,7 +4,7 @@
   "labelPetName": "Tiername",
   "labelPhone1": "📞 Erste Nummer",
   "labelPhone2": "📞 Zweite Nummer (optional)",
-  "labelDiameter": "📏 Marken-Durchmesser: <1>{{value}}mm</1>",
+  "labelDiameter": "📏 Marken-Durchmesser:",
   "nfcModeTitle": "NFC-Modus",
   "nfcModeDesc": "Fügt eine NFC-Chip-Aussparung zum Modell hinzu",
   "nfcChipInfo": "Hohlraum Ø25mm × 0.4mm in der Mitte — kompatibel mit 25mm-NFC-Tags",

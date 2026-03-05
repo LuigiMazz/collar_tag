@@ -4,7 +4,7 @@
   "labelPetName": "Pet name",
   "labelPhone1": "📞 First number",
   "labelPhone2": "📞 Second number (optional)",
-  "labelDiameter": "📏 Tag Diameter: <1>{{value}}mm</1>",
+  "labelDiameter": "📏 Tag Diameter:",
   "nfcModeTitle": "NFC Mode",
   "nfcModeDesc": "Adds NFC chip cavity to the model",
   "nfcChipInfo": "Ø25mm × 0.4mm cavity at center — compatible with 25mm NFC tags",

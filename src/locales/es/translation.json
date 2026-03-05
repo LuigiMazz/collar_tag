@@ -4,7 +4,7 @@
   "labelPetName": "Nombre del animal",
   "labelPhone1": "📞 Primer número",
   "labelPhone2": "📞 Segundo número (opcional)",
-  "labelDiameter": "📏 Diámetro de la medalla: <1>{{value}}mm</1>",
+  "labelDiameter": "📏 Diámetro de la medalla:",
   "nfcModeTitle": "Modo NFC",
   "nfcModeDesc": "Añade espacio para chip NFC en el modelo",
   "nfcChipInfo": "Cavidad Ø25mm × 0.4mm en el centro — compatible con tags NFC de 25mm",
