@@ -142,9 +142,9 @@ function TagEditor() {
   const [name, setName] = useState('LUNA');
   const [phone, setPhone] = useState('3331234567');
   const [phone2, setPhone2] = useState('');
-  const [description, setDescription] = useState('');
+  const [description] = useState('');
   const [diameter, setDiameter] = useState(30);
-  const [minimalQR, setMinimalQR] = useState(true);
+  const [minimalQR, setMinimalQR] = useState(false);
   const [autoRot] = useState(true);
   const [mesh, setMesh] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -262,22 +262,6 @@ function TagEditor() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">📝 Note mediche o caratteriali</label>
-            <textarea
-              id="description"
-              value={description}
-              maxLength={150}
-              rows={3}
-              placeholder="Esempio: Ha bisogno di farmaci..."
-              onChange={e => setDescription(e.target.value)}
-            />
-            <p className="hint" style={{ textAlign: 'right' }}>
-              {description.length}/150
-            </p>
-          </div>
-
-
-          <div className="form-group">
             <label htmlFor="diameter">📏 Diametro Medaglia: <strong>{diameter}mm</strong></label>
             <input
               id="diameter"
@@ -371,11 +355,24 @@ function TagEditor() {
             <TagScene mesh={mesh} autoRotate={autoRot} />
           ) : (
             <div className="canvas-placeholder">
-              <p>
-                {loading
-                  ? 'Costruzione geometria CSG in corso…'
-                  : 'Compila nome e telefono, poi clicca "Genera anteprima"'}
-              </p>
+              {loading ? (
+                <p>Costruzione geometria in corso…</p>
+              ) : (
+                <div className="welcome-card">
+                  <div className="welcome-icon">🐾</div>
+                  <h2 className="welcome-title">Crea la medaglietta del tuo animale</h2>
+                  <p className="welcome-desc">
+                    Questo tool genera una <strong>medaglietta 3D stampabile</strong> per il collare del tuo gatto o cane.<br />
+                    Sul fronte viene inciso un <strong>QR code</strong> che rimanda a una pagina con nome e contatto del proprietario.<br />
+                    Sul retro vengono incisi <strong>nome e telefono</strong> in rilievo.
+                  </p>
+                  <ol className="welcome-steps">
+                    <li>Inserisci il <strong>nome</strong> dell'animale e il tuo <strong>numero di telefono</strong></li>
+                    <li>Clicca <strong>"Genera anteprima"</strong> per vedere la medaglietta in 3D</li>
+                    <li>Scarica il file <strong>STL</strong>per la stampa 3D bicolore</li>
+                  </ol>
+                </div>
+              )}
             </div>
           )}
         </main>

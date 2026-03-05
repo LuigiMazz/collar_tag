@@ -359,6 +359,72 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-weight: 500;
 }
 
+.welcome-card {
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.welcome-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.welcome-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.welcome-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  text-align: left;
+}
+
+.welcome-steps {
+  list-style: none;
+  counter-reset: steps;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.welcome-steps li {
+  counter-increment: steps;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.welcome-steps li::before {
+  content: counter(steps);
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 /* ============================================================
    Pet Card (The Result Page)
    ============================================================ */
@@ -562,6 +628,41 @@ input[type="range"]::-webkit-slider-thumb:hover {
     min-height: 350px;
     flex: none;
   }
+
+  .canvas-placeholder {
+    padding: 16px;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  .welcome-card {
+    max-width: 100%;
+    padding: 20px 18px;
+    gap: 12px;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    border: 1px solid var(--border);
+  }
+
+  .welcome-icon {
+    font-size: 2rem;
+  }
+
+  .welcome-title {
+    font-size: 1.1rem;
+  }
+
+  .welcome-desc {
+    font-size: 0.85rem;
+  }
+
+  .welcome-steps {
+    gap: 8px;
+  }
+
+  .welcome-steps li {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -577,6 +678,17 @@ input[type="range"]::-webkit-slider-thumb:hover {
     flex-direction: column;
   }
 
+  .canvas-placeholder {
+    padding: 12px;
+  }
+
+  .welcome-card {
+    padding: 16px 14px;
+  }
+
+  .welcome-desc {
+    display: none;
+  }
 }
 
 .modal-actions {
