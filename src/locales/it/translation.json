@@ -79,5 +79,22 @@
   "labelSecondaryContact": "📍 Contatto secondario",
   "btnCallNow": "Chiama ora",
   "footerFoundAnimal": "Hai trovato questo animale?",
-  "footerFoundAnimalDesc": "Scansiona il QR sulla medaglietta oppure usa i contatti qui sopra per aiutarlo a tornare a casa. ❤️"
+  "footerFoundAnimalDesc": "Scansiona il QR sulla medaglietta oppure usa i contatti qui sopra per aiutarlo a tornare a casa. ❤️",
+  "wizardStep1Title": "Inserisci i dati",
+  "wizardStep1Desc": "Nome dell'animale e numero di telefono del proprietario.",
+  "wizardStep2Title": "Anteprima 3D",
+  "wizardStep2Desc": "Visualizza la medaglietta con QR code e nome inciso in rilievo.",
+  "wizardStep3Title": "Stampa & indossa!",
+  "wizardStep3Desc": "Scarica l'STL per la stampante 3D — senza account, senza cloud.",
+  "btnWriteLater": "🕓 Scrivi dopo (Mobile)",
+  "writeLaterTitle": "Programma NFC dopo la stampa",
+  "writeLaterDesc": "Se stai usando un PC, scansiona questo QR col tuo telefono per programmare il tag NFC in un secondo momento (post-stampa).",
+  "writeLaterLinkCopy": "Copia link per mobile",
+  "writeLaterLinkCopied": "Link copiato!",
+  "nfcWriterTitle": "Programmatore NFC",
+  "nfcWriterDesc": "Avvicina il tag al retro del telefono per scrivere i dati di:",
+  "btnStartNfcWrite": "📡 Inizia Scrittura NFC",
+  "msgNfcReady": "Pronto per la scrittura...",
+  "msgNfcWriting": "Scrittura in corso... Non allontanare il tag.",
+  "msgNfcError": "Errore durante la scrittura. Riprova."
 }

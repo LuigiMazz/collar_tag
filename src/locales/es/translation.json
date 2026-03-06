@@ -79,5 +79,11 @@
   "labelSecondaryContact": "📍 Contacto secundario",
   "btnCallNow": "Llamar ahora",
   "footerFoundAnimal": "¿Encontraste a este animal?",
-  "footerFoundAnimalDesc": "Escanea el QR en la medalla o usa los contactos de arriba para ayudarlo a volver a casa. ❤️"
+  "footerFoundAnimalDesc": "Escanea el QR en la medalla o usa los contactos de arriba para ayudarlo a volver a casa. ❤️",
+  "wizardStep1Title": "Añade los datos",
+  "wizardStep1Desc": "Nombre del animal y teléfono del dueño.",
+  "wizardStep2Title": "Vista previa 3D",
+  "wizardStep2Desc": "Visualiza la medalla con código QR y nombre grabado en relieve.",
+  "wizardStep3Title": "¡Imprime y úsalo!",
+  "wizardStep3Desc": "Descarga el STL para impresión 3D — sin cuenta, sin nube."
 }

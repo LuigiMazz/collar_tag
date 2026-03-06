@@ -731,6 +731,153 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* ============================================================
+   Welcome Wizard (onboarding carousel)
+   ============================================================ */
+.welcome-wizard {
+  max-width: 380px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.wizard-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  animation: wizardFadeUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes wizardFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wizard-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  width: 88px;
+  height: 88px;
+  background: var(--surface-alt);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.wizard-step-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wizard-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.wizard-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 260px;
+  margin: 0;
+}
+
+.wizard-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wizard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wizard-dot.active {
+  background: rgba(255, 112, 67, 0.22);
+  width: 28px;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wizard-dot-progress {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 0;
+  background: var(--primary);
+  border-radius: inherit;
+  animation: dotFill 3.5s linear forwards;
+  pointer-events: none;
+}
+
+@keyframes dotFill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+.wizard-dot:hover:not(.active) {
+  background: var(--text-muted);
+}
+
+.wizard-cta {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .welcome-wizard {
+    max-width: 100%;
+    padding: 24px 20px;
+    gap: 20px;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+  }
+
+  .wizard-icon {
+    width: 72px;
+    height: 72px;
+    font-size: 2.8rem;
+  }
+
+  .wizard-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wizard-desc {
+    display: none;
+  }
+
+  .welcome-wizard {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+}
+
+/* ============================================================
    NFC Toggle
    ============================================================ */
 .nfc-toggle-group {

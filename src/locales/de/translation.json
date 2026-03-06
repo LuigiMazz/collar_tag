@@ -79,5 +79,11 @@
   "labelSecondaryContact": "📍 Zweiter Kontakt",
   "btnCallNow": "Jetzt anrufen",
   "footerFoundAnimal": "Haben Sie dieses Tier gefunden?",
-  "footerFoundAnimalDesc": "Scannen Sie den QR auf der Marke oder nutzen Sie die obigen Kontakte, um ihm nach Hause zu helfen. ❤️"
+  "footerFoundAnimalDesc": "Scannen Sie den QR auf der Marke oder nutzen Sie die obigen Kontakte, um ihm nach Hause zu helfen. ❤️",
+  "wizardStep1Title": "Daten eingeben",
+  "wizardStep1Desc": "Tiername und Telefonnummer des Besitzers.",
+  "wizardStep2Title": "3D-Vorschau",
+  "wizardStep2Desc": "Sieh die Marke mit QR-Code und graviertem Namen in Echtzeit.",
+  "wizardStep3Title": "Drucken!",
+  "wizardStep3Desc": "STL herunterladen — kein Konto, keine Cloud."
 }

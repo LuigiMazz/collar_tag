@@ -79,5 +79,11 @@
   "labelSecondaryContact": "📍 Secondary contact",
   "btnCallNow": "Call now",
   "footerFoundAnimal": "Did you find this animal?",
-  "footerFoundAnimalDesc": "Scan the QR on the tag or use the contacts above to help them get home. ❤️"
+  "footerFoundAnimalDesc": "Scan the QR on the tag or use the contacts above to help them get home. ❤️",
+  "wizardStep1Title": "Enter the details",
+  "wizardStep1Desc": "Your pet's name and your phone number.",
+  "wizardStep2Title": "3D Preview",
+  "wizardStep2Desc": "See the tag with QR code and engraved name in real time.",
+  "wizardStep3Title": "Print & wear!",
+  "wizardStep3Desc": "Download the STL for 3D printing — no account, no cloud."
 }

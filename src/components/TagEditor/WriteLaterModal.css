@@ -1,0 +1,25 @@
+.write-later-modal {
+    max-width: 450px !important;
+    text-align: center;
+}
+
+.qr-container {
+    background: white;
+    padding: 1rem;
+    display: inline-block;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.qr-img {
+    display: block;
+    max-width: 200px;
+    height: auto;
+}
+
+.write-later-modal p {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}

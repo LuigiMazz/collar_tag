@@ -1,0 +1,114 @@
+
+.nfc-writer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding: 2rem;
+    text-align: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.nfc-writer-header {
+    margin-bottom: 3rem;
+}
+
+.nfc-logo {
+    width: 80px;
+    margin-bottom: 1rem;
+}
+
+.nfc-writer-content {
+    max-width: 400px;
+    width: 100%;
+}
+
+.pet-summary {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.pet-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.pet-summary h2 {
+    margin: 0;
+    color: #333;
+}
+
+.pet-summary p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-weight: 500;
+}
+
+.nfc-instruction {
+    color: #444;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-nfc-large {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    padding: 1.2rem 2rem;
+    border-radius: 15px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    transition: transform 0.2s;
+}
+
+.btn-nfc-large:active {
+    transform: scale(0.98);
+}
+
+.nfc-status-box {
+    padding: 2rem;
+    border-radius: 20px;
+    margin-top: 1rem;
+}
+
+.nfc-status-box.info {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.nfc-status-box.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.nfc-status-box.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0,0,0,0.1);
+    border-top: 4px solid currentColor;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: nfc-spin 1s linear infinite;
+}
+
+@keyframes nfc-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
